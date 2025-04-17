@@ -3,5 +3,5 @@
 Original website: https://qurantype.com
 
 New features:
-* Indication of repetition of a verse and/or word.
+* Indication of repetition of a ayah and/or word.
 * Error counting
