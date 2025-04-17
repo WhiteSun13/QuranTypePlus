@@ -12,7 +12,8 @@
 .is-family-secondary,
 #Quran-container,
 #inputField,
-#Surah-name {
+#Surah-name, 
+#Basmallah {
     font-family: 'IslamicFont', sans-serif;
     color: var(--input-text-color);
 }
@@ -94,6 +95,7 @@ body {
     background-color: var(--input-background-color);
     border-color: var(--input-border-color);
     color: var(--input-text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .input::placeholder, .textarea::placeholder {
@@ -246,6 +248,7 @@ html.dark #dark-mode-icon { display: inline-block; }
 .footer {
     padding-top: 2rem;
     padding-bottom: 2rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 #errorCounterContainer {
     color: var(--incorrect-word-color);
