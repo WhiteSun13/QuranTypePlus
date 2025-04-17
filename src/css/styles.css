@@ -1,513 +1,261 @@
-root {
-    transition: background-color 0.3s ease;
-
+/*------------------------------------*\
+    #FONTS
+\*------------------------------------*/
+@font-face {
+    font-family: 'IslamicFont';
+    src: local('IslamicFont'),
+         url('../../public/fonts/UthmaniHafs.woff') format('woff');
+    font-display: swap; /* Improve perceived performance */
 }
 
-/* Light Theme */
-:root.light {
-    --background-color: #f5f5f5; 
-    --text-color: #111111;
+/* Apply special fonts */
+.is-family-secondary,
+#Quran-container,
+#inputField,
+#Surah-name {
+    font-family: 'IslamicFont', sans-serif;
+    color: var(--input-text-color);
+}
 
+.logo-title {
+    font-family: 'Dancing Script', cursive;
+    color: var(--input-text-color);
+}
+
+
+/*------------------------------------*\
+    #THEMING VARIABLES & BASE
+\*------------------------------------*/
+:root {
+    /* Define custom properties for themes */
+    --text-color: #111111;
+    --background-color: #f5f5f5;
     --correct-word-color: #008000;
     --incorrect-word-color: #e10000;
-
-    --button-text-color: #ffffff;
-    --button-background-color: #1473e6;
-    --button-background-color-hovered: #0D66D0;
-
-    --anchor-color: #515154;
-    --anchor-color-hovered: #333333;
-
-    --input-border-color: #d6d6d6; 
+    --link-color: #515154;
+    --link-hover-color: #333333;
+    --button-primary-bg: #1473e6;
+    --button-primary-bg-hover: #0D66D0;
+    --button-primary-text: #ffffff;
+    --input-border-color: #d6d6d6;
     --input-background-color: #fafafa;
-    --input-text-color: #111111; 
-    --input-placeholder-color: #838383; 
+    --input-text-color: #111111;
+    --input-placeholder-color: #838383;
+    --footer-background-color: #fafafa; /* Default footer background */
+    --footer-text-color: var(--text-color);
+    --footer-link-color: var(--link-color);
+    --footer-link-hover-color: var(--link-hover-color);
 }
 
-/* Dark Theme */
 :root.dark {
-    --background-color: #000; 
-    --text-color: #ffffff; 
-
+    --text-color: #ffffff;
+    --background-color: #1a1a1a; /* Slightly off-black */
     --correct-word-color: #00e500;
     --incorrect-word-color: #ff8100;
-
-    --button-text-color: #ffffff;
-    --button-background-color: #1473e6;
-    --button-background-color-hovered: #0D66D0;
-
-    --anchor-color: #c7c7c7;
-    --anchor-color-hovered: #ffffff;
-
-    --input-border-color: #d6d6d6;
-    --input-background-color: #111;
+    --link-color: #c7c7c7;
+    --link-hover-color: #ffffff;
+    --button-primary-bg: #1473e6; /* Can be same or different */
+    --button-primary-bg-hover: #0D66D0;
+    --button-primary-text: #ffffff;
+    --input-border-color: #555; /* Darker border */
+    --input-background-color: #2c2c2c; /* Dark input bg */
     --input-text-color: #ffffff;
-    --input-placeholder-color: #d6d6d6;
-
+    --input-placeholder-color: #aaa; /* Lighter placeholder */
+    --footer-background-color: #111111; /* Dark footer background */
+    --footer-text-color: var(--text-color);
+    --footer-link-color: var(--link-color);
+    --footer-link-hover-color: var(--link-hover-color);
 }
 
-
-
-/* TODO add different themes. */
-
-/* A collection of themes I liked:
-
-:root.light {
-    --background-color: #F2EDD7; 
-    --text-color: #755139;
-
-    --button-text-color: #F2EDD7;
-    --button-background-color: #755139;
-    --button-background-color-hovered: #5a3d29;
-
-    --anchor-color: #755139;
-    --anchor-color-hovered: #5a3d29;
+html {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    /* Smooth scroll for better UX if needed */
+    /* scroll-behavior: smooth; */
 }
-
-:root.light {
-    --background-color: #D7C49E; 
-    --text-color: #343148;
-
-    --button-text-color: #D7C49E;
-    --button-background-color: #343148;
-    --button-background-color-hovered: #5a3d29;
-
-    --anchor-color: #262223;
-    --anchor-color-hovered: #5a3d29;
-}
-
-:root.light {
-    --background-color: #DDC6B6; 
-    --text-color: #262223;
-
-    --button-text-color: #DDC6B6;
-    --button-background-color: #262223;
-    --button-background-color-hovered: #5a3d29;
-
-    --anchor-color: #262223;
-    --anchor-color-hovered: #5a3d29;
-}
-
-I like this theme.  This could be one of them.
-:root.light {
-    --background-color: #F3EFEA; 
-    --text-color: #331E05;
-
-    --button-text-color: #F3EFEA;
-    --button-background-color: #785429;
-    --button-background-color-hovered: #63441d;
-
-    --anchor-color: #785429;
-    --anchor-color-hovered: #63441d;
-}
-*/
 
 body {
-
-    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    display: flex;
-    flex-direction: column;
-    justify-content:space-between; /* Center the board horizontally on the page */
-    margin: 0;
+    /* Prevent horizontal scrollbar if Bulma adds weird margins */
+    overflow-x: hidden;
     min-height: 100vh;
-    
-    transition: background-color 0.3s ease;
-    
-    color: var(--text-color);
-    background: var(--background-color);
-}
-
-header {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    margin: 10px 0px;
-}
-
-h1 {
-    /* TODO: Use a logo instead of fonts maybe? */
-    font-family: 'Dancing Script', cursive;
-    font-size: 3em; /* Maybe change this */
-    margin: 0px;
-    margin: 0px 30px 0px ;
-  }
-
-#headerRight {
-    display: flex;
-    align-items: center;
-
-}
-
-#contentContainer {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    /* flex: 1; */
-
-    direction: rtl;
+    justify-content: space-between;
 }
 
-footer {
-    font-size: small;
-    margin-top: 50px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 50px;
-}
 
-a {
-    color: var(--anchor-color);
-    text-decoration: none; 
+/*------------------------------------*\
+    #BULMA OVERRIDES & CUSTOMIZATIONS
+\*------------------------------------*/
 
-}
-
-a:hover {
-    color: var(--anchor-color-hovered);
-    text-decoration: underline;
-}
-
-#Copyright {
-    margin: 0px;
-    color: var(--anchor-color);
-}
-
-#searchContainer {
-    display: flex;
-    gap: 5px;
-}
-
-/* Apply input styles */
-input {
-    border: 1px solid var(--input-border-color);
+/* Apply theme colors to Bulma elements */
+.input, .textarea, .tag {
     background-color: var(--input-background-color);
+    border-color: var(--input-border-color);
     color: var(--input-text-color);
-
-    padding: 10px;
-    border-radius: 4px;
-    box-sizing: border-box;
 }
 
-/* Apply placeholder styles */
-input::placeholder {
+.input::placeholder, .textarea::placeholder {
     color: var(--input-placeholder-color);
 }
 
-#inputField {
-    min-width: 200px;
-    max-width: 400px;
-    height: 65px; /* Adjust the height as needed */
-
-    margin: 10px;
-    line-height: 5; 
-    font-family: 'IslamicFont', sans-serif;  
-    font-size: 34px;
+.button.is-primary {
+    background-color: var(--button-primary-bg);
+    border-color: transparent; /* Often looks better */
+    color: var(--button-primary-text);
 }
 
-
-button {
-
-    background-color: var(--button-background-color);
-    color: var(--button-text-color);
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+.button.is-primary:hover, .button.is-primary:focus {
+    background-color: var(--button-primary-bg-hover);
+    color: var(--button-primary-text); /* Ensure text color stays */
 }
 
-button:hover {
-    background-color: var(--button-background-color-hovered);
+a, .footer-link {
+    color: var(--link-color);
 }
 
-  @font-face {
-    font-family: 'IslamicFonts';
-    src: local('IslamicFonts'), /* Local reference */
-         url('../../public/fonts/UthmanTN_v2-0.woff2') format('woff2'), /* Modern Browsers */
-         url('../../public/fonts/UthmanTN_v2-0.woff') format('woff'), /* Less modern Browsers */
-         url('../../public/fonts/UthmanTN_v2-0.ttf') format('ttf'); /* Safari, Android and iOS */
-  }
-
-  /* TODO */
-  @font-face {
-    font-family: 'IslamicFont';
-    src: local('IslamicFont'), /* Local reference */
-        /* url('../../public/fonts/TODO.woff2') format('woff2'), Modern Browsers */
-        /* url('../../public/fonts/TODO.ttf') format('ttf'); Safari, Android and iOS */
-         url('../../public/fonts/UthmaniHafs.woff') format('woff'); /* Less modern Browsers */
-  }
-
-
-#Quran-container {
-    /* removed flex for now cos it messes up whitespace for copy and pasting divs */
-    /* display: flex; */
-    /* flex-direction: column; */
-    /* text-align: right; */
-    /* align-items: center; */
-
-
-    /* TODO Basically each row is 60px (with font size of 34px). Not sure yet how many rows looks the best. */
-    /* TODO Maybe also have it so it changes dynamically based on user preference? */
-    /* height: 361px; For 6 rows. */
-    height: 241px; /* For 4 rows */
-
-    min-width: 300px;
-    max-width: 800px;
-
-    margin: 0px 20px 0px 10px;
-
-    /* overflow: auto; */
-    overflow: hidden;
-
-    font-family: 'IslamicFont', sans-serif;  
-    /* font-size: 42px; */
-    /* font-size: 80px; */
-    font-size: 34px;
-
+a:hover, .footer-link:hover {
+    color: var(--link-hover-color);
 }
 
-.correctWord {
+.footer {
+    background-color: var(--footer-background-color);
+    color: var(--footer-text-color);
+}
+
+.footer a {
+    color: var(--footer-link-color);
+}
+.footer a:hover {
+    color: var(--footer-link-hover-color);
+}
+
+/* Correct/Incorrect word styling */
+#Quran-container .correctWord {
     color: var(--correct-word-color);
+    /* transition: color 0.1s ease-in-out; */
 }
 
-.incorrectWord {
+#Quran-container .incorrectWord {
     color: var(--incorrect-word-color);
+    /* Optional: add subtle background or underline for more emphasis */
+    background-color: rgba(255, 0, 0, 0.15);
+    /* transition: color 0.1s ease-in-out; */
 }
 
+/*------------------------------------*\
+    #COMPONENT STYLING
+\*------------------------------------*/
 
-#noTashkeelContainer {
-    display: none;
+/* Header/Nav Adjustments */
+.level {
+    /* Add padding if needed */
+    /* padding: 0 1rem; */
 }
 
-#Surah-details {
-    font-family: 'IslamicFont', sans-serif;  
-    font-size:22px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    margin-bottom: 10px;
-
-}
-
-#inputField {
-    min-width: 200px;
-    max-width: 400px;
-    height: 65px; /* Adjust the height as needed */
-
+/* Quran Container */
+#Quran-container {
+    /* Adjust height based on desired number of lines & font size */
+    /* Example: Roughly 4 lines with 34px font and Bulma line-height */
+    height: 220px;
+    overflow: hidden; /* Keep hidden to manage scroll behavior via JS */
+    max-width: 800px; /* Match original */
+    margin-right: auto; /* Center in container */
+    margin-left: auto;
+    font-size: 34px; /* Original font size */
+    line-height: 1.6; /* Adjust line-height for readability */
     padding: 10px;
-    /* border: 1px solid #ccc; Input already has styles */
-    border-radius: 4px;
-    box-sizing: border-box;
-    
-    margin: 10px;
-    line-height: 5; 
-    font-family: 'IslamicFont', sans-serif;  
-    font-size: 34px;
 }
 
-
-
-.configuration {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-top: 10px;
+#Quran-container span {
+    /* Ensure proper spacing between words if needed */
+    margin-left: 0.2em; /* Adjust spacing for RTL */
+     display: inline-block; /* Ensures visibility toggling works reliably */
 }
 
-/* idk if i want this to be fixed. It is good when it is flex */
-/* .toggle-container {\n    position: fixed;\n    top: 20px;\n    right: 20px;\n} */
-
-#dark-mode-toggle {
-    background: none;
-    border: none;
-    cursor: pointer;
-    outline: none;
-}
-
-#light-mode-icon,
-#dark-mode-icon {
-    /* width: 48px;\n    height: 48px; */
-
-    width: 37px;
-    height: 37px;
-}
-
-
-.dark-mode {
-    background-color: #333;
-    color: #fff;
-}
-
-.row {
-    opacity: 1; /* Initially visible */
-    transition: opacity 0.5s ease; /* Adding a transition effect on opacity change */
-}
-
-
-.loading-indicator {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 20px;
-    border-radius: 10px;
-    display: none;
-}
-
-.hidden {
-    opacity:0;
-}
-
-.display-none {
-    display: none;
-}
-
-/* === Existing CSS above === */
-
-/* Container for input field and its associated buttons */
-#Quran-input-controls-container {
-    display: flex;
-    flex-direction: column; /* Stack input row and repetition row */
-    align-items: center; /* Center items horizontally */
-    gap: 15px; /* Increased space between rows */
-    margin-top: 15px; /* Space above the input area */
-    width: 100%; /* Allow container to span width for centering */
-    max-width: 800px; /* Match Quran container max-width */
-    padding: 0 20px; /* Add padding to prevent sticking to edges */
-    box-sizing: border-box; /* Include padding in width calculation */
-}
-
-#Quran-input-container {
-    display: flex;
-    justify-content: center;
-    align-items: center; /* Align items vertically */
-    gap: 10px; /* Space between input field and button */
-    width: 100%; /* Take full width of parent */
-}
-
+/* Main Input Field */
 #inputField {
-    /* Removed fixed min/max width, let it be flexible */
-    flex-grow: 1; /* Allow input to grow */
-     max-width: 450px; /* Set a max-width instead of fixed */
-    height: 65px; /* Adjust the height as needed */
-    margin: 0; /* Reset margin if needed */
-    line-height: 5; 
-    font-family: 'IslamicFont', sans-serif;  
-    font-size: 34px;
+    font-size: 34px; /* Match Quran container font size */
+    height: 65px; /* Original height */
+    text-align: right; /* Ensure text aligns right */
+    /* Bulma's .input already handles padding etc. */
+    max-width: 500px; /* Limit width */
+}
+#Quran-input-container .control.is-expanded {
+    /* Override Bulma's default flex-grow if input becomes too wide */
+     /* flex-grow: 0; */
+     /* flex-basis: auto; */
+}
+#Quran-input-container .field {
+     width: 100%; /* Make the group take full width */
+     max-width: 700px; /* Control max width of input+button group */
 }
 
+
+/* Hide Ayahs Button */
 #hideAyahsButton {
-    margin:0; /* Remove default margin if any */
     height: 65px; /* Match input field height */
-    align-self: center; /* Align button vertically */
-    flex-shrink: 0; /* Prevent button from shrinking */
+    align-self: stretch; /* Ensure button stretches vertically in group */
 }
 
-/* Row container for both repetition controls */
-#repetitionControlsRow {
-    display: flex;
-    justify-content: center; /* Center the controls horizontally */
-    align-items: center;
-    gap: 30px; /* Space between Ayah and Word repetition controls */
-    width: 100%; /* Take full width */
-    direction: ltr; /* Force LTR for this row */
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+/* Repetition Controls */
+.repetition-input {
+    width: 65px; /* Fixed width for number inputs */
+    text-align: center;
 }
-
-/* Container for repetition controls (shared style) */
-#repetitionContainer, #wordRepetitionContainer {
-    display: flex;
-    align-items: center; /* Vertically align label, input, and text */
-    gap: 8px; /* Space between elements */
-    /* direction: ltr; Already set on parent row */
+/* Remove spinners from number input */
+.repetition-input[type=number]::-webkit-inner-spin-button,
+.repetition-input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
-
-#repetitionContainer label, #wordRepetitionContainer label {
-     color: var(--text-color); /* Ensure label uses theme text color */
-     white-space: nowrap; /* Prevent label text wrapping */
-}
-
-#repetitionContainer input[type="number"], #wordRepetitionContainer input[type="number"] {
-    width: 60px; /* Slightly wider input */
-    padding: 8px; /* Adjust padding */
-    height: auto; /* Override general input height if needed */
-    font-size: 1em; /* Adjust font size if needed */
-    text-align: center; /* Center the number inside the input */
-     /* Remove margin if inherited */
-     margin: 0;
-     border: 1px solid var(--input-border-color);
-     background-color: var(--input-background-color);
-     color: var(--input-text-color);
-     border-radius: 4px;
-}
-
-#repetitionContainer span, #wordRepetitionContainer span {
-     color: var(--text-color); /* Ensure the 'times' text uses theme text color */
-}
-
-/* Hide the spinners on number input */
-#repetitionContainer input[type=number]::-webkit-inner-spin-button, 
-#repetitionContainer input[type=number]::-webkit-outer-spin-button,
-#wordRepetitionContainer input[type=number]::-webkit-inner-spin-button, 
-#wordRepetitionContainer input[type=number]::-webkit-outer-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
-}
-#repetitionContainer input[type=number],
-#wordRepetitionContainer input[type=number] {
+.repetition-input[type=number] {
   -moz-appearance: textfield; /* Firefox */
 }
-
-/* Footer Styles */
-footer {
-    font-size: small;
-    margin-top: 50px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 30px; /* Adjust gap */
-    flex-wrap: wrap; /* Allow wrapping */
-     padding: 0 15px; /* Add padding */
+#repetitionControlsRow .field.has-addons {
+    /* Ensure addons don't break on smaller screens if wrapped */
+     /* flex-shrink: 0; */
 }
 
-/* Error Counter Styles */
+
+/* Theme Toggle Button */
+#dark-mode-toggle {
+    background: none !important; /* Override Bulma button background */
+    border: none !important;
+    padding: 0.5rem; /* Adjust padding */
+    cursor: pointer;
+}
+.theme-icon {
+     width: 24px; /* Adjust icon size */
+     height: 24px;
+     vertical-align: middle; /* Align icon nicely */
+}
+#dark-mode-toggle .icon {
+    /* Override Bulma icon color if it interferes */
+    color: inherit !important;
+}
+/* Ensure only one icon shows */
+html.light #dark-mode-icon { display: none; }
+html.light #light-mode-icon { display: inline-block; }
+html.dark #light-mode-icon { display: none; }
+html.dark #dark-mode-icon { display: inline-block; }
+
+
+/* Footer */
+.footer {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
 #errorCounterContainer {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    color: var(--incorrect-word-color); /* Use error color */
-    font-weight: bold;
-     order: -1; /* Move it to the beginning visually in LTR footer */
+    color: var(--incorrect-word-color);
+    white-space: nowrap; /* Prevent wrapping */
 }
 
-#errorCountLabel, #errorCountDisplay {
-     color: var(--incorrect-word-color); /* Ensure color consistency */
-}
-
-#Copyright {
-    margin: 0px;
-    color: var(--anchor-color);
-    text-align: center; /* Center copyright on small screens */
-}
-
-a {
-    color: var(--anchor-color);
-    text-decoration: none; 
-    white-space: nowrap; /* Prevent links wrapping */
-}
-
-a:hover {
-    color: var(--anchor-color-hovered);
-    text-decoration: underline;
-}
-
-
-.visually-hidden {
+/*------------------------------------*\
+    #UTILITIES
+\*------------------------------------*/
+.is-sr-only { /* Screen Reader Only - Bulma has .is-sr-only */
     position: absolute !important;
     clip: rect(1px, 1px, 1px, 1px);
     padding: 0 !important;
@@ -517,64 +265,91 @@ a:hover {
     overflow: hidden;
     white-space: nowrap;
 }
-
-/* Responsive Adjustments */
-@media screen and (max-width: 650px) { /* Adjust breakpoint if needed */
-     #repetitionControlsRow {
-        flex-direction: column; /* Stack repetition controls vertically */
-        gap: 10px; /* Reduce gap when stacked */
-        align-items: center; /* Center items when stacked */
-     }
-
-    #Quran-input-controls-container {
-         gap: 10px; /* Reduce gap */
-     }
-
-    footer {
-        flex-direction: column; /* Stack footer items */
-        gap: 10px;
-    }
-
-     #errorCounterContainer {
-        order: 0; /* Reset order for column layout */
-    }
+.is-fullwidth {
+    width: 100%;
 }
 
+
+/*------------------------------------*\
+    #RESPONSIVE ADJUSTMENTS
+\*------------------------------------*/
+@media screen and (max-width: 768px) { /* Bulma's tablet breakpoint */
+    .level-left + .level-right {
+        margin-top: 1rem; /* Add space when level items stack */
+    }
+    #Quran-container {
+        font-size: 28px; /* Slightly smaller font on mobile */
+        height: 190px; /* Adjust height */
+    }
+    #inputField {
+        font-size: 28px; /* Match Quran font size */
+        height: 55px; /* Adjust height */
+    }
+     #hideAyahsButton {
+        height: 55px; /* Match input height */
+    }
+
+    /* Stack footer items */
+    .footer .level {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .footer .level-item {
+         margin: 0 !important; /* Reset level item margins */
+    }
+}
 
 @media screen and (max-width: 500px) {
-    header {
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    #Quran-input-container {
-        flex-direction: column; /* Stack input and button */
-        width: 90%; /* Adjust width */
-        max-width: none; /* Remove max-width override */
-        gap: 10px;
-    }
-
-    #inputField {
-        width: 100%; /* Make input take full width */
-        margin: 0 0 10px 0; /* Adjust margin */
-        max-width: none; /* Remove max width constraint */
-    }
-
-    #hideAyahsButton {
-         width: auto; /* Allow button to size naturally */
-         padding: 10px 20px; /* Adjust padding */
-         height: auto; /* Reset height */
-         align-self: stretch; /* Make button full width */
-    }
-
-     #repetitionControlsRow {
-         width: 90%; /* Adjust width */
+     .level:not(.is-mobile) .level-item { /* Ensure search/toggle stack */
+         margin-right: 0;
+         margin-bottom: 0.75rem;
      }
-
-     #repetitionContainer input[type="number"], 
-     #wordRepetitionContainer input[type="number"] {
-        width: 50px; /* Smaller input on mobile */
+     .level:not(.is-mobile) .level-item:last-child {
+         margin-bottom: 0;
+     }
+     #Quran-input-container.is-grouped { /* Stack input and button */
+         flex-direction: column;
+         align-items: stretch; /* Make items full width */
+     }
+     #Quran-input-container .control {
+         width: 100%; /* Make controls full width */
+     }
+      #Quran-input-container .control:not(:last-child) {
+         margin-bottom: 0.75rem; /* Add space when stacked */
+     }
+     #inputField {
+        max-width: none; /* Allow full width */
+     }
+      #repetitionControlsRow.is-grouped {
+         flex-direction: column; /* Stack repetition controls */
+          gap: 0.75rem;
      }
 }
 
-/* === Existing CSS Below === */
+/* Toastify Customization (Optional) */
+.toastify {
+  padding: 12px 20px;
+  color: #fff;
+  display: inline-block;
+  box-shadow: 0 3px 6px -1px rgba(0, 0, 0, 0.12), 0 10px 36px -4px rgba(77, 96, 232, 0.3);
+  background: linear-gradient(to right, #1473e6, #0D66D0); /* Match button color */
+  position: fixed;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
+  border-radius: 4px; /* Match Bulma radius */
+  cursor: pointer;
+  text-decoration: none;
+  max-width: calc(50% - 20px);
+  z-index: 9999; /* Bulma uses 30 for navbar, 40 for modal. Keep high */
+}
+
+/* RTL adjustments for Toastify if needed */
+html[dir="rtl"] .toastify.on.toastify-right {
+    right: auto;
+    left: 15px;
+}
+html[dir="rtl"] .toastify.on.toastify-left {
+    left: auto;
+    right: 15px;
+}

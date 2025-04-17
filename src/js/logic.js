@@ -6,8 +6,10 @@ const QURAN_SYMBOLS = ["۞", "﴾","﴿", "۩", 'ۖ', 'ۗ', 'ۘ', 'ۙ', 'ۚ', ' 
 let PROPERTIES_OF_SURAHS = null
 
 // --- UI State ---
-const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-let isDarkMode = localStorage.getItem('darkMode') === 'enabled' || prefersDarkMode;
+// Определяем предпочтения пользователя ИЛИ сохраненное значение
+const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+const savedMode = localStorage.getItem('darkMode');
+let isDarkMode = savedMode === 'enabled' || (savedMode === null && prefersDarkMode);
 let isHideAyahsButtonActive = false
 let currentSearchQuery = null; // Initialize to null to ensure first load happens
 
@@ -748,8 +750,9 @@ function addListeners() {
  */
 function runApp(initialSurah = 1, initialAyah = 1, initialScript = 'uthmani') {
     cacheDOMElements(); // Cache elements first
-    utils.initDarkMode(isDarkMode); 
-    addListeners(); 
+    // Инициализация темы происходит ДО получения данных
+    utils.initDarkMode(isDarkMode);
+    addListeners();
 
     setupSurahData()
         .then(() => {
@@ -766,4 +769,4 @@ function runApp(initialSurah = 1, initialAyah = 1, initialScript = 'uthmani') {
 }
 
 // Run the application
-runApp(1, 1); 
+runApp(1, 1);

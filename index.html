@@ -3,26 +3,29 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- <meta name="description" content="Explore the beauty of the Quranic language on our interactive platform, designed to enhance your Arabic proficiency through typing Quranic text. Elevate your skills in writing, reading, and vocabulary as you engage with the timeless words of the Quran. Start your journey to linguistic excellence and spiritual enrichment today."> -->
     <meta name="description" content="Explore the beauty of the Quran and enhance your Arabic skills on Quran Type! Type and explore Quranic text to improve your Arabic writing, reading, and vocabulary. Unlock the beauty of the language while deepening your understanding of the sacred Quran.">
     <title>Quran Type +</title>
+
+    <!-- Bulma CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <!-- Пользовательские стили поверх Bulma -->
     <link rel="stylesheet" href="src/css/styles.css">
-    <script type="module" src="src/js/logic.js" defer></script>
 
-    <!-- jquery for use in AJAX call -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- For adding the toast functionality -->
+    <!-- Toastify -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    
 
-    <!-- TODO: MAYBE GET A LOGO IMAGE TO USE INSTEAD -->
-    <!-- logo font -->
+    <!-- Пользовательские скрипты -->
+    <script type="module" src="src/js/logic.js" defer></script>
+
+    <!-- jQuery (если все еще нужен, хотя для Bulma часто не требуется) -->
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+
+    <!-- Шрифты -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Noto+Naskh+Arabic&display=swap" rel="stylesheet">
-    
+
     <!-- Favicons -->
     <link rel="apple-touch-icon" sizes="180x180" href="public/icons/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="public/icons/favicon-32x32.png">
@@ -36,71 +39,121 @@
 
 </head>
 <body>
-    <header>
-        <h1>Quran Type +</h1>
-        <div id="headerRight">
-            <div id="searchContainer">
-                <label for='Surah-selection-input' class="visually-hidden">Enter Surah and Verse:</label>
-                <input type="search" placeholder="Enter Surah number" aria-label="Search Quran"
-                        autocomplete="off" id="Surah-selection-input">
-                <button id="Display-Surah-button">Display</button>
-            </div>
-            
-            <div class="toggle-container">
-                <button id="dark-mode-toggle">
-                    <!-- Light mode SVG -->
-                    <img src="public/images/LanternLight.svg" alt="Light Mode" id="light-mode-icon">
-                    <!-- Dark mode SVG -->
-                    <img src="public/images/LanternDark.svg" alt="Dark Mode" id="dark-mode-icon" style="display: none;">
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <main value dir="rtl" id="contentContainer">
-        <div value dir="rtl" id="Surah-details">
-            <div id="Surah-name"></div>
-            <div value dir="rtl" id="Basmallah"></div>
-        </div>
-    
-        <div value dir="rtl" id="Quran-container"></div>
-        <div value dir="rtl" id="noTashkeelContainer"></div>
-
-        <!-- Container for Input and Controls -->
-        <div value dir="rtl" id="Quran-input-controls-container"> 
-            <div value dir ="rtl" id="Quran-input-container">
-                <label for='inputField' class="visually-hidden">Type the verses from the Quran shown:</label>
-                <input autocomplete="off" value dir="rtl" id="inputField">
-                <button id="hideAyahsButton">Hide Ayahs</button>
-            </div>
-            
-            <!-- Repetition Controls Row -->
-            <div id="repetitionControlsRow">
-                <!-- Ayah Repetition Controls -->
-                <div id="repetitionContainer">
-                    <label for="repeatCountInput">Repeat Ayah:</label>
-                    <input type="number" id="repeatCountInput" name="repeatCount" min="1" value="1"> 
-                    <span>times</span>
-                </div>
-                <!-- Word Repetition Controls -->
-                <div id="wordRepetitionContainer">
-                    <label for="wordRepeatCountInput">Repeat Word:</label>
-                    <input type="number" id="wordRepeatCountInput" name="wordRepeatCount" min="1" value="1"> 
-                    <span>times</span>
+    <section class="section pt-4 pb-4">
+        <nav class="level">
+            <!-- Left side -->
+            <div class="level-left">
+                <div class="level-item">
+                    <h1 class="title logo-title">Quran Type +</h1>
                 </div>
             </div>
-        </div>
-    </main>
 
-    <footer>
-        <!-- Error Counter Display -->
-        <div id="errorCounterContainer"> 
-            <span id="errorCountLabel">Errors:</span>
-            <span id="errorCountDisplay">0</span>
+            <!-- Right side -->
+            <div class="level-right">
+                <div class="level-item">
+                    <!-- Search -->
+                    <div class="field has-addons">
+                        <div class="control">
+                            <label for='Surah-selection-input' class="is-sr-only">Enter Surah and Verse:</label>
+                            <input class="input" type="search" placeholder="Enter Surah:Ayah" aria-label="Search Quran"
+                                   autocomplete="off" id="Surah-selection-input">
+                        </div>
+                        <div class="control">
+                            <button class="button is-primary" id="Display-Surah-button">
+                                Display
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                 <div class="level-item">
+                     <!-- Theme Toggle -->
+                    <button class="button is-text" id="dark-mode-toggle" aria-label="Toggle theme">
+                        <img src="public/images/LanternLight.svg" alt="Light Mode" id="light-mode-icon" class="theme-icon">
+                        <img src="public/images/LanternDark.svg" alt="Dark Mode" id="dark-mode-icon" class="theme-icon" style="display: none;">
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </section>
+
+    <section class="section pt-2 pb-5">
+        <div class="container has-text-centered">
+            <!-- Surah Details -->
+            <div id="Surah-details" class="mb-4">
+                <div id="Surah-name" class="subtitle is-4"></div>
+                <div id="Basmallah" class="is-size-5"></div>
+            </div>
+
+            <!-- Quran Text Container -->
+            <div id="Quran-container" class="content has-text-right mb-5" dir="rtl">
+                <!-- Spans will be injected here by JS -->
+            </div>
+            <!-- Hidden Container for No-Tashkeel text -->
+            <div id="noTashkeelContainer" style="display: none;"></div>
+
+            <!-- Input and Controls Container -->
+            <div id="Quran-input-controls-container" class="is-flex is-flex-direction-column is-align-items-center">
+                 <!-- Input Row -->
+                <div class="field is-grouped is-grouped-centered is-fullwidth mb-4" id="Quran-input-container">
+                    <div class="control">
+                        <button id="hideAyahsButton" class="button is-primary is-medium">Hide Ayahs</button>
+                    </div>
+                    <div class="control">
+                        <label for='inputField' class="is-sr-only">Type the verses from the Quran shown:</label>
+                        <input class="input is-medium" autocomplete="off" id="inputField" dir="rtl">
+                    </div>
+                </div>
+
+                <!-- Repetition Controls Row -->
+                <div id="repetitionControlsRow" class="field is-grouped is-grouped-centered is-grouped-multiline" dir="ltr"> <!-- Force LTR for controls -->
+                    <!-- Ayah Repetition -->
+                    <div class="control">
+                        <div class="field has-addons" id="wordRepetitionContainer">
+                            <div class="tags has-addons">
+                                <span class="tag">Repeat Ayah:</span>
+                                <input type="number" id="repeatCountInput" name="repeatCount" min="1" value="1" class="input is-small repetition-input">
+                                <span class="tag">times</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Word Repetition -->
+                    <div class="control">
+                        <div class="field has-addons" id="wordRepetitionContainer">
+                            <div class="tags has-addons">
+                                <span class="tag">Repeat Word:</span>
+                                <input type="number" id="wordRepeatCountInput" name="wordRepeatCount" min="1" value="1" class="input is-small repetition-input">
+                                <span class="tag">times</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <p id="Copyright">Copyright © 2024 Quran Type. All rights reserved.</p>
-        <a href="https://api-docs.quran.com/docs/category/quran.com-api" target="_blank">Quran Api source</a>
-        <a href="https://qurantype.com">Original Website</a>
+    </section>
+
+    <footer class="footer pt-5 pb-5">
+        <div class="content has-text-centered">
+            <div class="level">
+                 <!-- Error Counter -->
+                <div class="level-item has-text-centered">
+                    <div id="errorCounterContainer">
+                        <span id="errorCountLabel" class="has-text-weight-bold">Errors: </span>
+                        <span id="errorCountDisplay" class="has-text-weight-bold">0</span>
+                    </div>
+                </div>
+                <!-- Copyright -->
+                <div class="level-item has-text-centered">
+                     <p id="Copyright">Copyright © 2024 Quran Type. All rights reserved.</p>
+                </div>
+                 <!-- Links -->
+                 <div class="level-item has-text-centered">
+                    <a href="https://api-docs.quran.com/docs/category/quran.com-api" target="_blank" class="footer-link">Quran Api source</a>
+                 </div>
+                 <div class="level-item has-text-centered">
+                     <a href="https://qurantype.com" target="_blank" class="footer-link">Original Website</a>
+                 </div>
+            </div>
+        </div>
     </footer>
 </body>
 </html>

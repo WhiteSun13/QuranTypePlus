@@ -157,35 +157,53 @@ export function fillContainer(surahContent, container) {
 }
 
 export function initDarkMode(isDarkMode) {
-    const root = document.documentElement;
-    // Apply dark mode if enabled
+    const root = document.documentElement; // Используем <html>
     if (isDarkMode) {
-        root.className = 'dark';
-        document.getElementById('light-mode-icon').style.display = 'none';
-        document.getElementById('dark-mode-icon').style.display = 'inline';
+        root.classList.remove('light');
+        root.classList.add('dark');
+        // Обновляем иконки (если они все еще используются с таким id)
+        const lightIcon = document.getElementById('light-mode-icon');
+        const darkIcon = document.getElementById('dark-mode-icon');
+        if (lightIcon) lightIcon.style.display = 'none';
+        if (darkIcon) darkIcon.style.display = 'inline-block'; // Используем inline-block для img
     } else {
-        root.className = 'light';
-        document.getElementById('light-mode-icon').style.display = 'inline';
-        document.getElementById('dark-mode-icon').style.display = 'none';
+        root.classList.remove('dark');
+        root.classList.add('light');
+        const lightIcon = document.getElementById('light-mode-icon');
+        const darkIcon = document.getElementById('dark-mode-icon');
+        if (lightIcon) lightIcon.style.display = 'inline-block';
+        if (darkIcon) darkIcon.style.display = 'none';
     }
+     // Сохраняем начальное состояние в localStorage, если его нет
+     if (localStorage.getItem('darkMode') === null) {
+        localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+     }
 }
 
 // Function to toggle dark mode
 export function toggleDarkMode(isDarkMode) {
-    isDarkMode = !isDarkMode;
+    const root = document.documentElement; // Используем <html>
+    isDarkMode = !isDarkMode; // Переключаем состояние
 
-    // use includes here to handle case where class name is smth like: 'dark 2sdf2sd'
-    const root = document.documentElement;
-    const newTheme = root.className.includes('dark') ? 'light' : 'dark';
-    root.className = newTheme;
-
-    // Update the icon display
-    document.getElementById('light-mode-icon').style.display = isDarkMode ? 'none' : 'inline';
-    document.getElementById('dark-mode-icon').style.display = isDarkMode ? 'inline' : 'none';
+    if (isDarkMode) {
+        root.classList.remove('light');
+        root.classList.add('dark');
+        const lightIcon = document.getElementById('light-mode-icon');
+        const darkIcon = document.getElementById('dark-mode-icon');
+        if (lightIcon) lightIcon.style.display = 'none';
+        if (darkIcon) darkIcon.style.display = 'inline-block';
+    } else {
+        root.classList.remove('dark');
+        root.classList.add('light');
+        const lightIcon = document.getElementById('light-mode-icon');
+        const darkIcon = document.getElementById('dark-mode-icon');
+        if (lightIcon) lightIcon.style.display = 'inline-block';
+        if (darkIcon) darkIcon.style.display = 'none';
+    }
 
     // Save the dark mode preference
     localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
-    return isDarkMode
+    return isDarkMode; // Возвращаем новое состояние
 }
 
 // Exporting all functions under a single object
