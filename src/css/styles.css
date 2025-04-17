@@ -1,0 +1,580 @@
+root {
+    transition: background-color 0.3s ease;
+
+}
+
+/* Light Theme */
+:root.light {
+    --background-color: #f5f5f5; 
+    --text-color: #111111;
+
+    --correct-word-color: #008000;
+    --incorrect-word-color: #e10000;
+
+    --button-text-color: #ffffff;
+    --button-background-color: #1473e6;
+    --button-background-color-hovered: #0D66D0;
+
+    --anchor-color: #515154;
+    --anchor-color-hovered: #333333;
+
+    --input-border-color: #d6d6d6; 
+    --input-background-color: #fafafa;
+    --input-text-color: #111111; 
+    --input-placeholder-color: #838383; 
+}
+
+/* Dark Theme */
+:root.dark {
+    --background-color: #000; 
+    --text-color: #ffffff; 
+
+    --correct-word-color: #00e500;
+    --incorrect-word-color: #ff8100;
+
+    --button-text-color: #ffffff;
+    --button-background-color: #1473e6;
+    --button-background-color-hovered: #0D66D0;
+
+    --anchor-color: #c7c7c7;
+    --anchor-color-hovered: #ffffff;
+
+    --input-border-color: #d6d6d6;
+    --input-background-color: #111;
+    --input-text-color: #ffffff;
+    --input-placeholder-color: #d6d6d6;
+
+}
+
+
+
+/* TODO add different themes. */
+
+/* A collection of themes I liked:
+
+:root.light {
+    --background-color: #F2EDD7; 
+    --text-color: #755139;
+
+    --button-text-color: #F2EDD7;
+    --button-background-color: #755139;
+    --button-background-color-hovered: #5a3d29;
+
+    --anchor-color: #755139;
+    --anchor-color-hovered: #5a3d29;
+}
+
+:root.light {
+    --background-color: #D7C49E; 
+    --text-color: #343148;
+
+    --button-text-color: #D7C49E;
+    --button-background-color: #343148;
+    --button-background-color-hovered: #5a3d29;
+
+    --anchor-color: #262223;
+    --anchor-color-hovered: #5a3d29;
+}
+
+:root.light {
+    --background-color: #DDC6B6; 
+    --text-color: #262223;
+
+    --button-text-color: #DDC6B6;
+    --button-background-color: #262223;
+    --button-background-color-hovered: #5a3d29;
+
+    --anchor-color: #262223;
+    --anchor-color-hovered: #5a3d29;
+}
+
+I like this theme.  This could be one of them.
+:root.light {
+    --background-color: #F3EFEA; 
+    --text-color: #331E05;
+
+    --button-text-color: #F3EFEA;
+    --button-background-color: #785429;
+    --button-background-color-hovered: #63441d;
+
+    --anchor-color: #785429;
+    --anchor-color-hovered: #63441d;
+}
+*/
+
+body {
+
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    display: flex;
+    flex-direction: column;
+    justify-content:space-between; /* Center the board horizontally on the page */
+    margin: 0;
+    min-height: 100vh;
+    
+    transition: background-color 0.3s ease;
+    
+    color: var(--text-color);
+    background: var(--background-color);
+}
+
+header {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 10px 0px;
+}
+
+h1 {
+    /* TODO: Use a logo instead of fonts maybe? */
+    font-family: 'Dancing Script', cursive;
+    font-size: 3em; /* Maybe change this */
+    margin: 0px;
+    margin: 0px 30px 0px ;
+  }
+
+#headerRight {
+    display: flex;
+    align-items: center;
+
+}
+
+#contentContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* flex: 1; */
+
+    direction: rtl;
+}
+
+footer {
+    font-size: small;
+    margin-top: 50px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 50px;
+}
+
+a {
+    color: var(--anchor-color);
+    text-decoration: none; 
+
+}
+
+a:hover {
+    color: var(--anchor-color-hovered);
+    text-decoration: underline;
+}
+
+#Copyright {
+    margin: 0px;
+    color: var(--anchor-color);
+}
+
+#searchContainer {
+    display: flex;
+    gap: 5px;
+}
+
+/* Apply input styles */
+input {
+    border: 1px solid var(--input-border-color);
+    background-color: var(--input-background-color);
+    color: var(--input-text-color);
+
+    padding: 10px;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Apply placeholder styles */
+input::placeholder {
+    color: var(--input-placeholder-color);
+}
+
+#inputField {
+    min-width: 200px;
+    max-width: 400px;
+    height: 65px; /* Adjust the height as needed */
+
+    margin: 10px;
+    line-height: 5; 
+    font-family: 'IslamicFont', sans-serif;  
+    font-size: 34px;
+}
+
+
+button {
+
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: var(--button-background-color-hovered);
+}
+
+  @font-face {
+    font-family: 'IslamicFonts';
+    src: local('IslamicFonts'), /* Local reference */
+         url('../../public/fonts/UthmanTN_v2-0.woff2') format('woff2'), /* Modern Browsers */
+         url('../../public/fonts/UthmanTN_v2-0.woff') format('woff'), /* Less modern Browsers */
+         url('../../public/fonts/UthmanTN_v2-0.ttf') format('ttf'); /* Safari, Android and iOS */
+  }
+
+  /* TODO */
+  @font-face {
+    font-family: 'IslamicFont';
+    src: local('IslamicFont'), /* Local reference */
+        /* url('../../public/fonts/TODO.woff2') format('woff2'), Modern Browsers */
+        /* url('../../public/fonts/TODO.ttf') format('ttf'); Safari, Android and iOS */
+         url('../../public/fonts/UthmaniHafs.woff') format('woff'); /* Less modern Browsers */
+  }
+
+
+#Quran-container {
+    /* removed flex for now cos it messes up whitespace for copy and pasting divs */
+    /* display: flex; */
+    /* flex-direction: column; */
+    /* text-align: right; */
+    /* align-items: center; */
+
+
+    /* TODO Basically each row is 60px (with font size of 34px). Not sure yet how many rows looks the best. */
+    /* TODO Maybe also have it so it changes dynamically based on user preference? */
+    /* height: 361px; For 6 rows. */
+    height: 241px; /* For 4 rows */
+
+    min-width: 300px;
+    max-width: 800px;
+
+    margin: 0px 20px 0px 10px;
+
+    /* overflow: auto; */
+    overflow: hidden;
+
+    font-family: 'IslamicFont', sans-serif;  
+    /* font-size: 42px; */
+    /* font-size: 80px; */
+    font-size: 34px;
+
+}
+
+.correctWord {
+    color: var(--correct-word-color);
+}
+
+.incorrectWord {
+    color: var(--incorrect-word-color);
+}
+
+
+#noTashkeelContainer {
+    display: none;
+}
+
+#Surah-details {
+    font-family: 'IslamicFont', sans-serif;  
+    font-size:22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    margin-bottom: 10px;
+
+}
+
+#inputField {
+    min-width: 200px;
+    max-width: 400px;
+    height: 65px; /* Adjust the height as needed */
+
+    padding: 10px;
+    /* border: 1px solid #ccc; Input already has styles */
+    border-radius: 4px;
+    box-sizing: border-box;
+    
+    margin: 10px;
+    line-height: 5; 
+    font-family: 'IslamicFont', sans-serif;  
+    font-size: 34px;
+}
+
+
+
+.configuration {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+/* idk if i want this to be fixed. It is good when it is flex */
+/* .toggle-container {\n    position: fixed;\n    top: 20px;\n    right: 20px;\n} */
+
+#dark-mode-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    outline: none;
+}
+
+#light-mode-icon,
+#dark-mode-icon {
+    /* width: 48px;\n    height: 48px; */
+
+    width: 37px;
+    height: 37px;
+}
+
+
+.dark-mode {
+    background-color: #333;
+    color: #fff;
+}
+
+.row {
+    opacity: 1; /* Initially visible */
+    transition: opacity 0.5s ease; /* Adding a transition effect on opacity change */
+}
+
+
+.loading-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    display: none;
+}
+
+.hidden {
+    opacity:0;
+}
+
+.display-none {
+    display: none;
+}
+
+/* === Existing CSS above === */
+
+/* Container for input field and its associated buttons */
+#Quran-input-controls-container {
+    display: flex;
+    flex-direction: column; /* Stack input row and repetition row */
+    align-items: center; /* Center items horizontally */
+    gap: 15px; /* Increased space between rows */
+    margin-top: 15px; /* Space above the input area */
+    width: 100%; /* Allow container to span width for centering */
+    max-width: 800px; /* Match Quran container max-width */
+    padding: 0 20px; /* Add padding to prevent sticking to edges */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+#Quran-input-container {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Align items vertically */
+    gap: 10px; /* Space between input field and button */
+    width: 100%; /* Take full width of parent */
+}
+
+#inputField {
+    /* Removed fixed min/max width, let it be flexible */
+    flex-grow: 1; /* Allow input to grow */
+     max-width: 450px; /* Set a max-width instead of fixed */
+    height: 65px; /* Adjust the height as needed */
+    margin: 0; /* Reset margin if needed */
+    line-height: 5; 
+    font-family: 'IslamicFont', sans-serif;  
+    font-size: 34px;
+}
+
+#hideAyahsButton {
+    margin:0; /* Remove default margin if any */
+    height: 65px; /* Match input field height */
+    align-self: center; /* Align button vertically */
+    flex-shrink: 0; /* Prevent button from shrinking */
+}
+
+/* Row container for both repetition controls */
+#repetitionControlsRow {
+    display: flex;
+    justify-content: center; /* Center the controls horizontally */
+    align-items: center;
+    gap: 30px; /* Space between Ayah and Word repetition controls */
+    width: 100%; /* Take full width */
+    direction: ltr; /* Force LTR for this row */
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+/* Container for repetition controls (shared style) */
+#repetitionContainer, #wordRepetitionContainer {
+    display: flex;
+    align-items: center; /* Vertically align label, input, and text */
+    gap: 8px; /* Space between elements */
+    /* direction: ltr; Already set on parent row */
+}
+
+#repetitionContainer label, #wordRepetitionContainer label {
+     color: var(--text-color); /* Ensure label uses theme text color */
+     white-space: nowrap; /* Prevent label text wrapping */
+}
+
+#repetitionContainer input[type="number"], #wordRepetitionContainer input[type="number"] {
+    width: 60px; /* Slightly wider input */
+    padding: 8px; /* Adjust padding */
+    height: auto; /* Override general input height if needed */
+    font-size: 1em; /* Adjust font size if needed */
+    text-align: center; /* Center the number inside the input */
+     /* Remove margin if inherited */
+     margin: 0;
+     border: 1px solid var(--input-border-color);
+     background-color: var(--input-background-color);
+     color: var(--input-text-color);
+     border-radius: 4px;
+}
+
+#repetitionContainer span, #wordRepetitionContainer span {
+     color: var(--text-color); /* Ensure the 'times' text uses theme text color */
+}
+
+/* Hide the spinners on number input */
+#repetitionContainer input[type=number]::-webkit-inner-spin-button, 
+#repetitionContainer input[type=number]::-webkit-outer-spin-button,
+#wordRepetitionContainer input[type=number]::-webkit-inner-spin-button, 
+#wordRepetitionContainer input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+#repetitionContainer input[type=number],
+#wordRepetitionContainer input[type=number] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+/* Footer Styles */
+footer {
+    font-size: small;
+    margin-top: 50px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px; /* Adjust gap */
+    flex-wrap: wrap; /* Allow wrapping */
+     padding: 0 15px; /* Add padding */
+}
+
+/* Error Counter Styles */
+#errorCounterContainer {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--incorrect-word-color); /* Use error color */
+    font-weight: bold;
+     order: -1; /* Move it to the beginning visually in LTR footer */
+}
+
+#errorCountLabel, #errorCountDisplay {
+     color: var(--incorrect-word-color); /* Ensure color consistency */
+}
+
+#Copyright {
+    margin: 0px;
+    color: var(--anchor-color);
+    text-align: center; /* Center copyright on small screens */
+}
+
+a {
+    color: var(--anchor-color);
+    text-decoration: none; 
+    white-space: nowrap; /* Prevent links wrapping */
+}
+
+a:hover {
+    color: var(--anchor-color-hovered);
+    text-decoration: underline;
+}
+
+
+.visually-hidden {
+    position: absolute !important;
+    clip: rect(1px, 1px, 1px, 1px);
+    padding: 0 !important;
+    border: 0 !important;
+    height: 1px !important;
+    width: 1px !important;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 650px) { /* Adjust breakpoint if needed */
+     #repetitionControlsRow {
+        flex-direction: column; /* Stack repetition controls vertically */
+        gap: 10px; /* Reduce gap when stacked */
+        align-items: center; /* Center items when stacked */
+     }
+
+    #Quran-input-controls-container {
+         gap: 10px; /* Reduce gap */
+     }
+
+    footer {
+        flex-direction: column; /* Stack footer items */
+        gap: 10px;
+    }
+
+     #errorCounterContainer {
+        order: 0; /* Reset order for column layout */
+    }
+}
+
+
+@media screen and (max-width: 500px) {
+    header {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    #Quran-input-container {
+        flex-direction: column; /* Stack input and button */
+        width: 90%; /* Adjust width */
+        max-width: none; /* Remove max-width override */
+        gap: 10px;
+    }
+
+    #inputField {
+        width: 100%; /* Make input take full width */
+        margin: 0 0 10px 0; /* Adjust margin */
+        max-width: none; /* Remove max width constraint */
+    }
+
+    #hideAyahsButton {
+         width: auto; /* Allow button to size naturally */
+         padding: 10px 20px; /* Adjust padding */
+         height: auto; /* Reset height */
+         align-self: stretch; /* Make button full width */
+    }
+
+     #repetitionControlsRow {
+         width: 90%; /* Adjust width */
+     }
+
+     #repetitionContainer input[type="number"], 
+     #wordRepetitionContainer input[type="number"] {
+        width: 50px; /* Smaller input on mobile */
+     }
+}
+
+/* === Existing CSS Below === */
