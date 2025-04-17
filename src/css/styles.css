@@ -150,12 +150,6 @@ a:hover, .footer-link:hover {
     #COMPONENT STYLING
 \*------------------------------------*/
 
-/* Header/Nav Adjustments */
-.level {
-    /* Add padding if needed */
-    /* padding: 0 1rem; */
-}
-
 /* Quran Container */
 #Quran-container {
     /* Adjust height based on desired number of lines & font size */
@@ -184,11 +178,6 @@ a:hover, .footer-link:hover {
     /* Bulma's .input already handles padding etc. */
     max-width: 500px; /* Limit width */
 }
-#Quran-input-container .control.is-expanded {
-    /* Override Bulma's default flex-grow if input becomes too wide */
-     /* flex-grow: 0; */
-     /* flex-basis: auto; */
-}
 #Quran-input-container .field {
      width: 100%; /* Make the group take full width */
      max-width: 700px; /* Control max width of input+button group */
@@ -214,10 +203,6 @@ a:hover, .footer-link:hover {
 }
 .repetition-input[type=number] {
   -moz-appearance: textfield; /* Firefox */
-}
-#repetitionControlsRow .field.has-addons {
-    /* Ensure addons don't break on smaller screens if wrapped */
-     /* flex-shrink: 0; */
 }
 
 
