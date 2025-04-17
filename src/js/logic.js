@@ -436,8 +436,11 @@ function resetCurrentAyahUI(lastCorrectWordIndex) {
          const markerSpan = wordSpans[markerIndex];
          markerSpan.classList.remove('correctWord', 'incorrectWord');
          if (markerSpan.style.display !== 'none') {
-             // Ayah markers usually remain visible even when hiding words
-             markerSpan.style.visibility = 'visible'; 
+            if (isHideAyahsButtonActive) {
+                markerSpan.style.visibility = 'hidden';
+            } else {
+                markerSpan.style.visibility = 'visible';
+            }
          }
      }
 }
