@@ -247,6 +247,7 @@ function displaySurahFromJson(data, startAyah, script) {
  */
 function fillContainerWithSpans(content, container) {
     utils.clearContainer(container); 
+    originalTopOffset = utils.getOriginalTopOffset(container);
     const words = content.split(" ");
     words.forEach((word) => {
         if (word) { 
@@ -518,24 +519,42 @@ function handleSymbolSkip(wordSpans) {
 
 /**
  * Detects line wrapping and handles hiding previous lines.
+ * (Implementation based on logicOld.js behavior as requested)
+ * Compares subsequent lines against the offset of the *original* second line.
  * @param {NodeListOf<HTMLSpanElement>} wordSpans - Word spans.
  * @param {HTMLSpanElement} wordToCheck - The current word span to check.
  */
 function handleOffsetTop(wordSpans, wordToCheck) {
-     if (!wordToCheck || !originalTopOffset) return; // Need word and initial offset
+    // Защита: Убедимся, что есть слово для проверки и начальное смещение
+    if (!wordToCheck || !originalTopOffset) return;
 
+    // Получаем вертикальное смещение текущего слова
     const offsetTop = wordToCheck.offsetTop;
 
-    // First time moving past the very first line
-    if (offsetTop > originalTopOffset && secondRowTopOffset === 0) {
-        secondRowTopOffset = offsetTop; 
-        refWord = wordToCheck; 
-    }
-    // Subsequent line wraps (moved past the second recorded line)
-    else if (secondRowTopOffset > 0 && offsetTop > secondRowTopOffset) {
-        utils.handleHiddenWords(wordSpans, refWord); // Hide words before the previous refWord
-        refWord = wordToCheck; // Update refWord to the first word of the *new* current line
-        secondRowTopOffset = offsetTop; // Update the offset for the next wrap detection
+    // Проверяем, сместилось ли слово ниже первой строки
+    if (offsetTop > originalTopOffset) {
+        // Если secondRowTopOffset еще не установлен (т.е. это первый переход на вторую строку)
+        if (secondRowTopOffset === 0) {
+            // Запоминаем смещение второй строки
+            secondRowTopOffset = offsetTop;
+            // Устанавливаем refWord на первое слово этой второй строки
+            refWord = wordToCheck;
+        }
+
+        // --- Начало логики из logicOld.js ---
+        // Проверяем, сместилось ли слово ниже *запомненного* смещения второй строки
+        // Это условие будет срабатывать при переходе на третью, четвертую и т.д. строки.
+        // Важно: Используем здесь 'if', а не 'else if' (хотя функционально для этого случая разницы нет,
+        // т.к. условия взаимоисключающие после первого срабатывания), чтобы точно соответствовать logicOld.
+        // Ключевое отличие: secondRowTopOffset НЕ обновляется внутри этого блока.
+        if (offsetTop > secondRowTopOffset) {
+            // Если да, вызываем функцию для скрытия слов предыдущей строки (до refWord)
+            utils.handleHiddenWords(wordSpans, refWord);
+            // Обновляем refWord, чтобы он указывал на первое слово *новой* текущей строки
+            refWord = wordToCheck;
+            // secondRowTopOffset НЕ ОБНОВЛЯЕТСЯ здесь, как в logicOld.js
+        }
+        // --- Конец логики из logicOld.js ---
     }
 }
 
