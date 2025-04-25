@@ -5,7 +5,7 @@ const BASMALLA = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلر�
 const QURAN_SYMBOLS = ["۞", "﴾","﴿", "۩", 'ۖ', 'ۗ', 'ۘ', 'ۙ', 'ۚ', ' ۛ' , 'ۜ', 'ۛ ']
 let PROPERTIES_OF_SURAHS = null
 
-// --- UI State ---
+// --- UI State ---\
 // Определяем предпочтения пользователя ИЛИ сохраненное значение
 const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 const savedMode = localStorage.getItem('darkMode');
@@ -13,38 +13,38 @@ let isDarkMode = savedMode === 'enabled' || (savedMode === null && prefersDarkMo
 let isHideAyahsButtonActive = false
 let currentSearchQuery = null; // Initialize to null to ensure first load happens
 
-// --- Typing State ---
+// --- Typing State ---\
 let currentLetterIndex = 0 // Tracks letter index within a word (might be less relevant with word comparison)
 let mainQuranWordIndex = 0 // Index for the main container (with symbols)
 let noTashkeelWordIndex = 0 // Index for the hidden no-tashkeel container
 
-// --- Ayah Repetition State ---
+// --- Ayah Repetition State ---\
 let ayahRepeatCount = 1; // How many times to repeat the current ayah (renamed for clarity)
 let currentAyahRepetition = 1; // Which repetition we are currently on for the current ayah
 let currentAyahStartIndex_Main = 0; // Start index of the current ayah in the main container
 let currentAyahStartIndex_NoTashkeel = 0; // Start index of the current ayah in the no-tashkeel container
 
-// --- Word Repetition State ---
+// --- Word Repetition State ---\
 let wordRepeatCount = 1; // How many times to repeat the current word
 let currentWordRepetition = 1; // Which repetition we are currently on for the current word
 
-// --- Error Tracking ---
+// --- Error Tracking ---\
 let totalErrors = 0; // Cumulative errors for the current Surah/Ayah segment
 
-// --- Auto-Scroll Detection State ---
+// --- Auto-Scroll Detection State ---\
 let originalTopOffset = 0 // Top offset of the first line
 let secondRowTopOffset = 0 // Top offset of the second line (once it appears)
 let refWord = null // Reference word span used for hiding previous lines
 
-// --- DOM Element References (Cache frequently used elements) ---
+// --- DOM Element References (Cache frequently used elements) ---\
 let quranContainer = null;
 let noTashkeelContainer = null;
 let inputElement = null;
-let errorCountDisplay = null; 
+let errorCountDisplay = null;
 let repeatCountInput = null;
 let wordRepeatCountInput = null; // Added
 
-// --- Initialization Functions ---
+// --- Initialization Functions ---\
 
 /**
  * Caches frequently accessed DOM elements.
@@ -65,7 +65,7 @@ function cacheDOMElements() {
 async function setupSurahData() {
     const baseApiUrl = 'https://api.quran.com/api/v4';
     const url = `${baseApiUrl}/chapters`;
-    
+
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -86,25 +86,26 @@ async function setupSurahData() {
  * @param {string} script - The Quran script to use (e.g., 'uthmani').
  */
 async function getSurah(surahNumber, startAyah, script) {
-    // --- Reset State for New Surah/Ayah ---
+    // --- Reset State for New Surah/Ayah ---\
     currentLetterIndex = 0;
     mainQuranWordIndex = 0;
     noTashkeelWordIndex = 0;
-    
+
     currentAyahRepetition = 1; // Reset ayah repetition count
     currentWordRepetition = 1; // Reset word repetition count
-    
-    currentAyahStartIndex_Main = 0; 
-    currentAyahStartIndex_NoTashkeel = 0; 
-    
+
+    currentAyahStartIndex_Main = 0;
+    currentAyahStartIndex_NoTashkeel = 0;
+
     totalErrors = 0; // Reset error count
     updateErrorDisplay(); // Update the display to show 0 errors
 
-    originalTopOffset = 0; 
+    originalTopOffset = 0;
     secondRowTopOffset = 0;
     refWord = null;
-    
+
     inputElement.value = ""; // Clear input field
+    inputElement.disabled = false; // Re-enable input field if it was disabled
     inputElement.classList.remove('incorrectWord'); // Ensure input isn't styled incorrectly initially
 
     // Reset hide words state visually if needed (e.g., button text)
@@ -114,9 +115,9 @@ async function getSurah(surahNumber, startAyah, script) {
     // Constructing the API URL
     const baseApiUrl = 'https://api.quran.com/api/v4';
     const url = `${baseApiUrl}/quran/verses/${script}?chapter_number=${surahNumber}`;
-    
+
     // Show loading indicator (optional)
-    // showLoadingIndicator(true); 
+    // showLoadingIndicator(true);
 
     try {
         const response = await fetch(url);
@@ -128,13 +129,13 @@ async function getSurah(surahNumber, startAyah, script) {
 
         // Validate startAyah
         if (startAyah < 1) {
-             startAyah = 1; 
+             startAyah = 1;
         } else if (startAyah > totalAyahs) {
             const surahName = PROPERTIES_OF_SURAHS.chapters[surahNumber - 1].name_simple;
             showToast(`${surahName} only contains ${utils.convertToArabicNumber(totalAyahs)} ayahs. Starting from Ayah ${utils.convertToArabicNumber(1)}.`);
-            startAyah = 1; 
+            startAyah = 1;
         }
-        
+
         displaySurahFromJson(data, startAyah, script);
 
     } catch (error) {
@@ -146,7 +147,7 @@ async function getSurah(surahNumber, startAyah, script) {
     }
 }
 
-// --- Data Processing and Display ---
+// --- Data Processing and Display ---\
 
 /**
  * Processes the raw ayah text (e.g., handling iqlab).
@@ -156,7 +157,7 @@ async function getSurah(surahNumber, startAyah, script) {
 function processAyah(text) {
     let ayah = text;
     // Handle iqlab if necessary for comparison logic (may not be needed depending on removeTashkeel)
-    ayah = ayah.replace(/\u064B\u06E2/g, '\u064E\u06E2'); 
+    ayah = ayah.replace(/\u064B\u06E2/g, '\u064E\u06E2');
     ayah = ayah.replace(/\u064C\u06E2/g, '\u064F\u06E2');
     ayah = ayah.replace(/\u064D\u06ED/g, '\u0650\u06ED');
     return ayah;
@@ -187,17 +188,17 @@ function processData(data, startAyah, script) {
 function displaySurahFromJson(data, startAyah, script) {
     const surahNameEl = document.getElementById("Surah-name");
     const basmallahContainer = document.getElementById("Basmallah");
-    
-    data = processData(data, startAyah, script); 
-    const noTashkeelAyahs = []; 
+
+    data = processData(data, startAyah, script);
+    const noTashkeelAyahs = [];
 
     const surahContent = data.verses.map((ayah, i) => {
         const currentAyahNumber = startAyah + i;
         const arabicNumber = utils.convertToArabicNumber(currentAyahNumber);
         const processedAyah = processAyah(ayah[`text_${script}`]);
-        noTashkeelAyahs.push(processedAyah); 
-        return `${processedAyah} ﴿${arabicNumber}﴾`; 
-    }).join(" "); 
+        noTashkeelAyahs.push(processedAyah);
+        return `${processedAyah} ﴿${arabicNumber}﴾`;
+    }).join(" ");
 
     const chapterInfo = PROPERTIES_OF_SURAHS.chapters[data.meta.filters.chapter_number - 1];
     surahNameEl.textContent = `سورة ${chapterInfo.name_arabic}`;
@@ -205,18 +206,18 @@ function displaySurahFromJson(data, startAyah, script) {
     if (startAyah === 1 && chapterInfo.bismillah_pre) {
         basmallahContainer.textContent = BASMALLA;
     } else {
-        basmallahContainer.textContent = ""; 
+        basmallahContainer.textContent = "";
     }
 
     document.fonts.ready.then(() => {
         fillContainerWithSpans(surahContent, quranContainer);
-        
+
         const noTashkeelString = utils.createNoTashkeelString(noTashkeelAyahs);
         utils.fillContainer(noTashkeelString, noTashkeelContainer); // Use utility for hidden div
 
         originalTopOffset = utils.getOriginalTopOffset(quranContainer);
-        secondRowTopOffset = 0; 
-        refWord = null; 
+        secondRowTopOffset = 0;
+        refWord = null;
 
         const wordSpans = quranContainer.querySelectorAll('span');
         if (wordSpans.length > 0) {
@@ -230,13 +231,15 @@ function displaySurahFromJson(data, startAyah, script) {
                 }
             }
         }
-         currentAyahStartIndex_Main = 0; 
+         currentAyahStartIndex_Main = 0;
          currentAyahStartIndex_NoTashkeel = 0;
 
          // Apply initial hide state if active
          if (isHideAyahsButtonActive) {
              applyHideAyahsVisibility();
          }
+         // Focus input after content is loaded
+         inputElement.focus();
     });
 }
 
@@ -246,19 +249,19 @@ function displaySurahFromJson(data, startAyah, script) {
  * @param {HTMLElement} container - The container element to fill.
  */
 function fillContainerWithSpans(content, container) {
-    utils.clearContainer(container); 
+    utils.clearContainer(container);
     originalTopOffset = utils.getOriginalTopOffset(container);
     const words = content.split(" ");
     words.forEach((word) => {
-        if (word) { 
+        if (word) {
             const span = document.createElement('span');
-            span.textContent = `${word} `; 
+            span.textContent = `${word} `;
             container.appendChild(span);
         }
     });
 }
 
-// --- Input Handling and Logic ---
+// --- Input Handling and Logic ---\
 
 /**
  * Handles the 'input' event on the text field. Compares input with the expected text.
@@ -267,15 +270,17 @@ function fillContainerWithSpans(content, container) {
  */
 function handleInput(event) {
     const wordSpans = quranContainer.querySelectorAll('span');
-    
-    // Basic boundary checks
+
+    // Basic boundary checks - Check if typing should be allowed
     if (noTashkeelWordIndex >= noTashkeelContainer.childNodes.length || mainQuranWordIndex >= wordSpans.length) {
         // console.warn("Index out of bounds, possibly end of Surah/Ayah segment.");
-        return; 
+        // Prevent typing if segment is complete
+        event.target.value = ""; // Clear any accidental input
+        return;
     }
 
     const currentNoTashkeelWord = noTashkeelContainer.childNodes[noTashkeelWordIndex].textContent;
-    const inputText = event.target.value; 
+    const inputText = event.target.value;
     const targetWordSpan = wordSpans[mainQuranWordIndex];
     if (!targetWordSpan) return;
 
@@ -283,11 +288,11 @@ function handleInput(event) {
     if (currentNoTashkeelWord.startsWith(inputText)) {
         // Input is currently correct or partially correct
         targetWordSpan.classList.remove('incorrectWord'); // Remove error style if it was applied
-        
+
         // Check if the full word has been typed correctly
         if (inputText === currentNoTashkeelWord) {
             handleCorrectWord(wordSpans);
-        } 
+        }
     } else {
         // Incorrect input character(s) entered
         if (!targetWordSpan.classList.contains('incorrectWord')) { // Count error only once per incorrect attempt
@@ -306,7 +311,7 @@ function handleCorrectWord(wordSpans) {
     utils.applyCorrectWordStyle(correctWordSpan);
     inputElement.value = ""; // Clear input for the next repetition or word
 
-    // --- Word Repetition Logic ---
+    // --- Word Repetition Logic ---\
     if (currentWordRepetition < wordRepeatCount) {
         // ** Repeat Current Word **
         currentWordRepetition++;
@@ -327,19 +332,19 @@ function handleCorrectWord(wordSpans) {
         const isEndOfCurrentAyah = isNextWordAyahMarker(wordSpans, mainQuranWordIndex);
 
         if (isEndOfCurrentAyah) {
-            // --- End of Ayah Reached ---
+            // --- End of Ayah Reached ---\
             if (currentAyahRepetition < ayahRepeatCount) {
                 // ** Repeat Current Ayah **
                 currentAyahRepetition++;
                 showToast(`Repeating Ayah: ${utils.convertToArabicNumber(currentAyahRepetition)} / ${utils.convertToArabicNumber(ayahRepeatCount)}`);
-                
+
                 // Reset UI for the completed ayah (before resetting indices)
-                resetCurrentAyahUI(mainQuranWordIndex); 
+                resetCurrentAyahUI(mainQuranWordIndex);
 
                 // Reset indices to the start of the *current* ayah
                 mainQuranWordIndex = currentAyahStartIndex_Main;
                 noTashkeelWordIndex = currentAyahStartIndex_NoTashkeel;
-                
+
                 // Recalculate scroll offsets based on the new first word of the ayah
                 resetScrollOffsets(wordSpans, mainQuranWordIndex);
 
@@ -361,7 +366,7 @@ function handleCorrectWord(wordSpans) {
                 handleNextWord(wordSpans); // Advance indices past the current word and the ayah marker
             }
         } else {
-            // --- Move to Next Word (within the same ayah) ---
+            // --- Move to Next Word (within the same ayah) ---\
             handleNextWord(wordSpans); // Advance indices to the next word
         }
     }
@@ -370,26 +375,46 @@ function handleCorrectWord(wordSpans) {
 
 /**
  * Advances the word indices and handles UI updates (scrolling, symbol skipping).
+ * Checks for end of surah segment completion.
  * @param {NodeListOf<HTMLSpanElement>} wordSpans - The list of word spans.
  */
 function handleNextWord(wordSpans) {
     mainQuranWordIndex++;
     noTashkeelWordIndex++;
-    currentLetterIndex = 0; 
+    currentLetterIndex = 0;
 
-    if (mainQuranWordIndex < wordSpans.length) {
-        handleOffsetTop(wordSpans, wordSpans[mainQuranWordIndex]);
-        handleSymbolSkip(wordSpans); // Skip symbols *after* advancing index
-
-         // After potentially skipping symbols, ensure the next word is ready
-         const nextWordSpan = wordSpans[mainQuranWordIndex];
-         if (nextWordSpan && isHideAyahsButtonActive && nextWordSpan.style.visibility !== 'hidden') {
-             nextWordSpan.style.visibility = 'hidden'; // Hide next word if button active
-         }
-
-    } else {
-        showToast("Surah Segment Complete!"); // Or load next part
+    // Initial check if we've already gone past the end before symbol skipping
+    // (This is a safeguard, the main check happens after symbol skipping)
+    if (mainQuranWordIndex >= wordSpans.length) {
+         // This path shouldn't normally be hit if logic is correct,
+         // but handle it just in case.
+         // showToast("Surah Segment Complete!"); // Message moved to after symbol skip
+         inputElement.disabled = true; // Disable input
+         return;
     }
+
+    handleOffsetTop(wordSpans, wordSpans[mainQuranWordIndex]);
+    handleSymbolSkip(wordSpans); // Skip symbols *after* advancing index
+
+    // *** START: Surah End Check ***
+    // Check if we have processed the last element *after* potentially skipping symbols
+    if (mainQuranWordIndex >= wordSpans.length) {
+        showToast("Surah Segment Complete!"); // Notify user
+        inputElement.disabled = true; // Disable input field as we are done
+        return; // Exit the function, no more words to process
+    }
+    // *** END: Surah End Check ***
+
+    // If we haven't returned (i.e., not the end), proceed to prepare the next word
+    const nextWordSpan = wordSpans[mainQuranWordIndex];
+    if (nextWordSpan && isHideAyahsButtonActive && nextWordSpan.style.visibility !== 'hidden') {
+        nextWordSpan.style.visibility = 'hidden'; // Hide next word if button active
+    }
+
+    // // Original check (now replaced by the check after handleSymbolSkip)
+    // } else {
+    //     showToast("Surah Segment Complete!"); // Or load next part
+    // }
 }
 
 /**
@@ -403,7 +428,7 @@ function isNextWordAyahMarker(wordSpans, currentIndex) {
     if (nextIndex < wordSpans.length) {
         // Check the content of the *next* span
         const nextWordText = wordSpans[nextIndex].textContent;
-        return nextWordText.includes('﴿'); 
+        return nextWordText.includes('﴿');
     }
     return false;
 }
@@ -418,9 +443,9 @@ function resetCurrentAyahUI(lastCorrectWordIndex) {
 
     for (let i = ayahStartIndex; i <= lastCorrectWordIndex; i++) {
         const span = wordSpans[i];
-        if (span) { 
+        if (span) {
             span.classList.remove('correctWord', 'incorrectWord');
-            
+
             // Reset visibility based on hide button state, but only if not hidden by scrolling
             if (span.style.display !== 'none') {
                  if (isHideAyahsButtonActive) {
@@ -454,22 +479,22 @@ function resetCurrentAyahUI(lastCorrectWordIndex) {
  */
 function resetScrollOffsets(wordSpans, currentWordIndex) {
      originalTopOffset = utils.getOriginalTopOffset(quranContainer);
-     secondRowTopOffset = 0; 
-     refWord = null; 
+     secondRowTopOffset = 0;
+     refWord = null;
 
      if (currentWordIndex < wordSpans.length) {
         const startingSpan = wordSpans[currentWordIndex];
         refWord = startingSpan; // Start reference is the first word of the repeated ayah
 
         if (startingSpan.offsetTop > originalTopOffset) {
-             originalTopOffset = startingSpan.offsetTop; 
+             originalTopOffset = startingSpan.offsetTop;
         }
 
         for (let i = currentWordIndex + 1; i < wordSpans.length; i++) {
             const span = wordSpans[i];
-            if (span.offsetTop > originalTopOffset) { 
+            if (span.offsetTop > originalTopOffset) {
                 secondRowTopOffset = span.offsetTop;
-                refWord = span; 
+                refWord = span;
                 break;
             }
         }
@@ -482,38 +507,69 @@ function resetScrollOffsets(wordSpans, currentWordIndex) {
  * @param {NodeListOf<HTMLSpanElement>} wordSpans - Word spans.
  */
 function handleSymbolSkip(wordSpans) {
-    let skippedAyahMarker = false; 
+    let skippedAyahMarker = false;
 
+    // Keep skipping symbols as long as the index is valid and the current span is a symbol
     while (mainQuranWordIndex < wordSpans.length &&
            QURAN_SYMBOLS.some(char => wordSpans[mainQuranWordIndex].textContent.includes(char)))
     {
         const symbolSpan = wordSpans[mainQuranWordIndex];
-        utils.applyCorrectWordStyle(symbolSpan); // Mark symbol as passed
+        // Don't apply correct style immediately, only after typing the word *before* it
+        // utils.applyCorrectWordStyle(symbolSpan); // Mark symbol as passed - Moved this logic
 
+        // Check if the symbol *being skipped* is an ayah marker
         if (symbolSpan.textContent.includes('﴿')) {
             skippedAyahMarker = true;
+             // Apply correct style specifically to the ayah marker when skipped
+             utils.applyCorrectWordStyle(symbolSpan);
+             // Also handle its visibility based on the hide button state
+             if (symbolSpan.style.display !== 'none') { // Only if visible
+                 if (isHideAyahsButtonActive) {
+                     symbolSpan.style.visibility = 'hidden';
+                 } else {
+                      symbolSpan.style.visibility = 'visible';
+                 }
+             }
+        } else {
+             // Optional: Style other skipped symbols differently if needed
+             // For now, let's mark them correct as well, assuming they don't need typing
+             utils.applyCorrectWordStyle(symbolSpan);
+             // Handle visibility for other symbols too
+             if (symbolSpan.style.display !== 'none') {
+                if (isHideAyahsButtonActive) {
+                    symbolSpan.style.visibility = 'hidden';
+                } else {
+                    symbolSpan.style.visibility = 'visible';
+                }
+             }
         }
+
 
         mainQuranWordIndex++; // Increment main index past the symbol
 
+        // Check if we are still within bounds *after* incrementing
         if (mainQuranWordIndex < wordSpans.length) {
             // Important: Handle potential line wrap caused by the word *after* the symbol
             handleOffsetTop(wordSpans, wordSpans[mainQuranWordIndex]);
         } else {
-            break; // Reached end of content
+            break; // Reached end of content while skipping symbols
         }
     }
 
     // If we skipped an ayah marker, the *new* mainQuranWordIndex is the start of the next ayah
+    // But only update if we haven't reached the absolute end
     if (skippedAyahMarker && mainQuranWordIndex < wordSpans.length) {
         currentAyahStartIndex_Main = mainQuranWordIndex;
         // Sync noTashkeel index (it should be aligned after handleNextWord increments)
-        currentAyahStartIndex_NoTashkeel = noTashkeelWordIndex; 
+        currentAyahStartIndex_NoTashkeel = noTashkeelWordIndex;
         // Reset ayah repetition counter as we are starting a new ayah segment
-        currentAyahRepetition = 1; 
+        currentAyahRepetition = 1;
         // Reset word repetition as well for the first word of the new ayah
-        currentWordRepetition = 1; 
+        currentWordRepetition = 1;
     }
+    // Note: If mainQuranWordIndex >= wordSpans.length after the loop,
+    // it means the last element skipped was the final one.
+    // The end-of-surah check in handleNextWord will catch this.
 }
 
 
@@ -540,8 +596,6 @@ function handleOffsetTop(wordSpans, wordToCheck) {
             // Устанавливаем refWord на первое слово этой второй строки
             refWord = wordToCheck;
         }
-
-        // --- Начало логики из logicOld.js ---
         // Проверяем, сместилось ли слово ниже *запомненного* смещения второй строки
         // Это условие будет срабатывать при переходе на третью, четвертую и т.д. строки.
         // Важно: Используем здесь 'if', а не 'else if' (хотя функционально для этого случая разницы нет,
@@ -554,18 +608,17 @@ function handleOffsetTop(wordSpans, wordToCheck) {
             refWord = wordToCheck;
             // secondRowTopOffset НЕ ОБНОВЛЯЕТСЯ здесь, как в logicOld.js
         }
-        // --- Конец логики из logicOld.js ---
     }
 }
 
-// --- UI Interaction Handlers ---
+// --- UI Interaction Handlers ---\
 
 /**
  * Toggles the visibility of untyped words and updates the button text.
  */
 function handleHideAyahsButton() {
-    isHideAyahsButtonActive = !isHideAyahsButtonActive; 
-    const button = document.getElementById('hideAyahsButton'); 
+    isHideAyahsButtonActive = !isHideAyahsButtonActive;
+    const button = document.getElementById('hideAyahsButton');
     button.textContent = isHideAyahsButtonActive ? "Show Ayahs" : "Hide Ayahs";
     applyHideAyahsVisibility(); // Apply the change to spans
 }
@@ -575,30 +628,44 @@ function handleHideAyahsButton() {
  */
 function applyHideAyahsVisibility() {
     const wordSpans = quranContainer.querySelectorAll('span');
-    wordSpans.forEach(span => {
+    wordSpans.forEach((span, index) => {
         // Only affect spans not hidden by scrolling ('display: none')
         if (span.style.display !== 'none') {
+             // Always show the current word being typed, regardless of hide state
+            if (index === mainQuranWordIndex) {
+                span.style.visibility = 'visible';
+                return; // Skip further checks for the current word
+            }
+
              // Hide if button active AND span is not already correctly typed
              if (isHideAyahsButtonActive && !span.classList.contains('correctWord')) {
                  span.style.visibility = 'hidden';
              } else {
-                 // Show otherwise (unless it's an incorrect word during word repetition maybe?)
-                 // Ensure symbols like ayah markers remain visible
-                 if (!QURAN_SYMBOLS.some(char => span.textContent.includes(char)) && span.classList.contains('incorrectWord')) {
-                     // Keep incorrect words hidden if hiding is active? Decide on behavior.
-                     // For simplicity, let's make them visible when Show is clicked.
-                     span.style.visibility = 'visible';
-                 } else if (!span.textContent.includes(' ') || !QURAN_SYMBOLS.some(char => span.textContent.includes(char))) {
-                     // Make normal words visible if not hiding
-                      span.style.visibility = 'visible';
-                 }
-                 // Ensure symbols stay visible generally
-                 if (QURAN_SYMBOLS.some(char => span.textContent.includes(char))) {
-                     span.style.visibility = 'visible';
-                 }
+                 // Show otherwise
+                 span.style.visibility = 'visible';
+                 // // Previous logic (simplified):
+                 // // Show otherwise (unless it's an incorrect word during word repetition maybe?)
+                 // // Ensure symbols like ayah markers remain visible
+                 // if (!QURAN_SYMBOLS.some(char => span.textContent.includes(char)) && span.classList.contains('incorrectWord')) {
+                 //     // Keep incorrect words hidden if hiding is active? Decide on behavior.
+                 //     // For simplicity, let's make them visible when Show is clicked.
+                 //     span.style.visibility = 'visible';
+                 // } else if (!span.textContent.includes(' ') || !QURAN_SYMBOLS.some(char => span.textContent.includes(char))) {
+                 //     // Make normal words visible if not hiding
+                 //      span.style.visibility = 'visible';
+                 // }
+                 // // Ensure symbols stay visible generally
+                 // if (QURAN_SYMBOLS.some(char => span.textContent.includes(char))) {
+                 //     span.style.visibility = 'visible';
+                 // }
              }
         }
     });
+     // Ensure the current word is focused and visible after toggling
+     if (mainQuranWordIndex < wordSpans.length) {
+         wordSpans[mainQuranWordIndex].style.visibility = 'visible';
+     }
+     inputElement.focus();
 }
 
 
@@ -611,19 +678,19 @@ function processSearch(query) {
     if (currentSearchQuery === query && query !== "") { // Don't research same if not empty
         return;
     }
-   
+
     if (query === "") {
         // Optionally reload default or do nothing. Let's reload default.
         if (currentSearchQuery !== "1:1") { // Avoid reloading if already at default
-             currentSearchQuery = "1:1"; 
+             currentSearchQuery = "1:1";
              getSurah(1, 1, 'uthmani');
         }
         return;
     }
 
-    const processedQuery = query.split(/[\\s,:-]+/).filter(Boolean);
+    const processedQuery = query.split(/[\s,:-]+/).filter(Boolean);
     let surahNum = NaN;
-    let ayahNum = 1; 
+    let ayahNum = 1;
 
     if (processedQuery.length === 0 || processedQuery.length > 2) {
         showToast(`Invalid format. Use Surah:Ayah, Surah Ayah, or just Surah.`);
@@ -644,11 +711,11 @@ function processSearch(query) {
         ayahNum = parseInt(processedQuery[1], 10);
         if (ayahNum < 1) {
             showToast(`Ayah number must be 1 or greater. Starting from Ayah 1.`);
-            ayahNum = 1; 
+            ayahNum = 1;
         }
     }
-    
-    currentSearchQuery = query; // Store the valid query
+
+    currentSearchQuery = `${surahNum}:${ayahNum}`; // Store the processed query
     getSurah(surahNum, ayahNum, 'uthmani');
 }
 
@@ -663,7 +730,7 @@ function showToast(message) {
         gravity: "bottom",
         position: 'center',
         close: true,
-        style: { 
+        style: {
              background: "linear-gradient(to right, #1473e6, #0D66D0)", // Match button color
              color: "#ffffff" // White text
         }
@@ -688,7 +755,7 @@ function updateErrorDisplay() {
 }
 
 
-// --- Event Listeners Setup ---
+// --- Event Listeners Setup ---\
 
 /**
  * Adds all necessary event listeners to the UI elements.
@@ -707,12 +774,15 @@ function addListeners() {
     inputElement.addEventListener("focus", () => { // Clear potential error style on focus
         const wordSpans = quranContainer.querySelectorAll('span');
          if (mainQuranWordIndex < wordSpans.length) {
-            wordSpans[mainQuranWordIndex].classList.remove('incorrectWord');
+            const targetWordSpan = wordSpans[mainQuranWordIndex];
+            if (targetWordSpan) { // Ensure span exists
+                 targetWordSpan.classList.remove('incorrectWord');
+            }
          }
     });
-    
+
     // Ayah Repetition Input
-    repeatCountInput.addEventListener('change', (event) => { 
+    repeatCountInput.addEventListener('change', (event) => {
         const newCount = parseInt(event.target.value, 10);
         if (!isNaN(newCount) && newCount >= 1) {
             ayahRepeatCount = newCount;
@@ -726,7 +796,7 @@ function addListeners() {
      });
 
      // Word Repetition Input (New)
-    wordRepeatCountInput.addEventListener('change', (event) => { 
+    wordRepeatCountInput.addEventListener('change', (event) => {
         const newCount = parseInt(event.target.value, 10);
         if (!isNaN(newCount) && newCount >= 1) {
             wordRepeatCount = newCount;
@@ -751,18 +821,18 @@ function addListeners() {
     });
     surahInputElement.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
-            event.preventDefault(); 
+            event.preventDefault();
             processSearch(surahInputElement.value);
         }
     });
 
-    // Auto-focus on the main input field when the page loads
-    document.addEventListener("DOMContentLoaded", () => {
-        inputElement.focus();
-    });
+    // Auto-focus on the main input field is handled within displaySurahFromJson after fonts ready
+    // document.addEventListener("DOMContentLoaded", () => {
+    //     inputElement.focus();
+    // });
 }
 
-// --- Application Entry Point ---
+// --- Application Entry Point ---\
 
 /**
  * Initializes the application.
@@ -787,6 +857,8 @@ function runApp(initialSurah = 1, initialAyah = 1, initialScript = 'uthmani') {
             showToast("Failed to initialize application data. Please refresh.");
             // Display error state in UI?
             if(errorCountDisplay) errorCountDisplay.textContent = "Error";
+            // Optionally disable input if init fails
+             if (inputElement) inputElement.disabled = true;
         });
 }
 
