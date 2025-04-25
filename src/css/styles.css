@@ -240,6 +240,17 @@ html.dark #dark-mode-icon { display: inline-block; }
     white-space: nowrap; /* Prevent wrapping */
 }
 
+/* Добавь это в конец файла или в секцию Footer */
+#timerContainer {
+    color: var(--text-color); /* Используем цвет текста темы */
+    white-space: nowrap; /* Предотвращаем перенос строки */
+}
+
+#timerDisplay {
+     /* Можно добавить акцентный цвет, если хочешь */
+     color: var(--button-primary-bg);
+}
+
 /*------------------------------------*\
     #UTILITIES
 \*------------------------------------*/

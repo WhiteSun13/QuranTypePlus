@@ -206,6 +206,35 @@ export function toggleDarkMode(isDarkMode) {
     return isDarkMode; // Возвращаем новое состояние
 }
 
+/**
+ * Formats total elapsed milliseconds into HH:MM:SS.ms string format.
+ * @param {number} elapsedMilliseconds - The total elapsed time in milliseconds.
+ * @returns {string} The formatted time string (e.g., "00:01:30.550").
+ */
+export function formatTime(elapsedMilliseconds) {
+    // Обработка случая, если передано не число или отрицательное значение
+    if (isNaN(elapsedMilliseconds) || elapsedMilliseconds < 0) {
+        elapsedMilliseconds = 0;
+    }
+
+    // Вычисляем компоненты времени
+    const totalSeconds = Math.floor(elapsedMilliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const milliseconds = Math.floor(elapsedMilliseconds % 1000); // Используем floor для целых миллисекунд
+
+    // Добавляем ведущие нули
+    const formattedHours = String(hours).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
+    // Форматируем миллисекунды до 3 знаков
+    const formattedMilliseconds = String(milliseconds).padStart(3, '0');
+
+    // Возвращаем отформатированную строку
+    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}.${formattedMilliseconds}`;
+}
+
 // Exporting all functions under a single object
 export default {
     convertToArabicNumber,
@@ -220,4 +249,5 @@ export default {
     fillContainer,
     toggleDarkMode,
     initDarkMode,
+    formatTime,
 };

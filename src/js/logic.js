@@ -31,6 +31,11 @@ let currentWordRepetition = 1; // Which repetition we are currently on for the c
 // --- Error Tracking ---
 let totalErrors = 0; // Cumulative errors for the current Surah/Ayah segment
 
+// --- Timer State ---
+let timerInterval = null; // Stores the interval ID for the timer
+let startTime = null;  // Stores the timestamp when the timer started
+let timerDisplayElement = null; // Cache timer display element
+
 // --- Auto-Scroll Detection State ---
 let originalTopOffset = 0 // Top offset of the first line
 let secondRowTopOffset = 0 // Top offset of the second line (once it appears)
@@ -56,8 +61,8 @@ function cacheDOMElements() {
     errorCountDisplay = document.getElementById("errorCountDisplay"); // Cache error display
     repeatCountInput = document.getElementById('repeatCountInput');
     wordRepeatCountInput = document.getElementById('wordRepeatCountInput'); // Cache word repeat input
+    timerDisplayElement = document.getElementById("timerDisplay");
 }
-
 
 /**
  * Fetches properties of all Surahs (like names, bismillah presence) from the API.
@@ -87,6 +92,7 @@ async function setupSurahData() {
  */
 async function getSurah(surahNumber, startAyah, script) {
     // --- Reset State for New Surah/Ayah ---
+    resetTimer();
     currentLetterIndex = 0;
     mainQuranWordIndex = 0;
     noTashkeelWordIndex = 0;
@@ -267,6 +273,11 @@ function fillContainerWithSpans(content, container) {
  * @param {Event} event - The input event object.
  */
 function handleInput(event) {
+    // Запускаем таймер, если он еще не запущен
+    if (startTime === null) {
+        startTimer();
+    }
+    
     const wordSpans = quranContainer.querySelectorAll('span');
     
     // Basic boundary checks
@@ -384,6 +395,7 @@ function handleNextWord(wordSpans) {
     if (mainQuranWordIndex >= wordSpans.length) {
         // Мы обработали последнее слово/символ и вышли за пределы массива
         showToast("Surah Segment Complete!"); // Показываем сообщение о завершении
+        stopTimer();
         inputElement.disabled = true; // Опционально: отключаем поле ввода
         console.log("End of text reached."); // Для отладки
         return; // Прекращаем дальнейшую обработку, так как текст закончился
@@ -399,6 +411,7 @@ function handleNextWord(wordSpans) {
     if (mainQuranWordIndex >= wordSpans.length) {
         // Мы обработали последний символ (который был пропущен) и вышли за пределы
         showToast("Surah Segment Complete!"); // Показываем сообщение о завершении
+        stopTimer();
         inputElement.disabled = true; // Опционально: отключаем поле ввода
         console.log("End of text reached after skipping symbols."); // Для отладки
         return; // Прекращаем дальнейшую обработку
@@ -716,6 +729,74 @@ function updateErrorDisplay() {
     }
 }
 
+// --- НАЧАЛО: Обновленные функции таймера ---
+
+/**
+ * Updates the timer display element with the current elapsed time (HH:MM:SS.ms).
+ */
+function updateTimerDisplay() {
+    // Не обновлять, если таймер не запущен или элемент не найден
+    if (!startTime || !timerDisplayElement) return;
+
+    // Вычисляем прошедшее время в миллисекундах
+    const now = Date.now();
+    const elapsedMilliseconds = now - startTime;
+
+    // Форматируем и отображаем время с помощью обновленной утилиты
+    timerDisplayElement.textContent = utils.formatTime(elapsedMilliseconds);
+}
+
+/**
+ * Starts the timer. Records the start time and sets a frequent interval for millisecond updates.
+ */
+function startTimer() {
+    // Запускаем, только если таймер еще не запущен (startTime не установлен)
+    if (startTime !== null) {
+        // console.log("Timer already running."); // Для отладки
+        return;
+    }
+
+    // Останавливаем любой предыдущий интервал на всякий случай
+    if (timerInterval) {
+        clearInterval(timerInterval);
+    }
+    // Записываем время начала
+    startTime = Date.now();
+    // Немедленно обновляем дисплей (покажет 00:00:00.000)
+    updateTimerDisplay();
+    // Устанавливаем интервал для частого обновления (например, каждые 50мс)
+    // Это компромисс между плавностью и производительностью
+    timerInterval = setInterval(updateTimerDisplay, 50); // Обновляем 20 раз в секунду
+    // console.log("Timer started"); // Для отладки
+}
+
+/**
+ * Stops the timer by clearing the interval.
+ */
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+         // Выполним последнее обновление для точности, так как интервал мог сработать позже
+         updateTimerDisplay();
+        // console.log("Timer stopped"); // Для отладки
+    }
+}
+
+/**
+ * Resets the timer: stops it, resets start time, and sets display to "00:00:00.000".
+ */
+function resetTimer() {
+    stopTimer(); // Останавливаем таймер
+    startTime = null; // !!! Важно: Сбрасываем startTime, чтобы startTimer сработал при следующем вводе
+    if (timerDisplayElement) {
+        // Сбрасываем текст на дисплее в новый формат
+        timerDisplayElement.textContent = "00:00:00.000";
+    }
+    // console.log("Timer reset"); // Для отладки
+}
+
+// --- КОНЕЦ: Обновленные функции таймера ---
 
 // --- Event Listeners Setup ---
 
