@@ -18,9 +18,6 @@
     <!-- Пользовательские скрипты -->
     <script type="module" src="src/js/logic.js" defer></script>
 
-    <!-- jQuery (если все еще нужен, хотя для Bulma часто не требуется) -->
-    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
-
     <!-- Шрифты -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,12 +64,10 @@
                 </div>
                 <div class="level-item">
                     <!-- Theme Toggle (оставляем только изображения внутри кнопки) -->
-                   <button class="button is-text image-button" id="dark-mode-toggle" aria-label="Toggle theme" title="Сменить тему"> <!-- Добавляем is-text, image-button, title -->
+                   <button class="button is-text image-button mr-2" id="dark-mode-toggle" aria-label="Toggle theme" title="Сменить тему"> <!-- Добавляем is-text, image-button, title -->
                        <img src="public/images/LanternLight.svg" alt="Light Mode" id="light-mode-icon" class="theme-icon button-icon">
                        <img src="public/images/LanternDark.svg" alt="Dark Mode" id="dark-mode-icon" class="theme-icon button-icon" style="display: none;">
                    </button>
-               </div>
-                <div class="level-item">
                     <!-- Кнопка Изменить Суру -->
                     <button class="button is-text image-button" id="change-surah-button" aria-label="Изменить Суру" title="Изменить Суру">
                         <img src="public/images/MenuLight.svg" alt="Изменить Суру" id="light-menu-icon" class="button-icon"> 
@@ -89,10 +84,10 @@
                 <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth" id="surah-selection-table">
                     <thead>
                         <tr>
-                            <th>#</th> <!-- Номер суры -->
+                            <th>№</th> <!-- Номер суры -->
                             <th>سورة</th>
                             <th>Surah</th>
-                            <th>Place</th>
+                            <th>Period</th>
                             <th>Ayah</th>
                             <th>Time</th>
                             <th>No missclick</th>
