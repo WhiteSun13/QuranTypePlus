@@ -42,7 +42,7 @@
     --input-background-color: #fafafa;
     --input-text-color: #111111;
     --input-placeholder-color: #838383;
-    --footer-background-color: #fafafa; /* Default footer background */
+    --footer-background-color: #eaeaea;
     --footer-text-color: var(--text-color);
     --footer-link-color: var(--link-color);
     --footer-link-hover-color: var(--link-hover-color);
@@ -62,7 +62,7 @@
     --input-background-color: #2c2c2c; /* Dark input bg */
     --input-text-color: #ffffff;
     --input-placeholder-color: #aaa; /* Lighter placeholder */
-    --footer-background-color: #111111; /* Dark footer background */
+    --footer-background-color: #010101; /* Dark footer background */
     --footer-text-color: var(--text-color);
     --footer-link-color: var(--link-color);
     --footer-link-hover-color: var(--link-hover-color);
@@ -72,6 +72,7 @@ html {
     background-color: var(--background-color);
     color: var(--text-color);
     transition: background-color 0.3s ease, color 0.3s ease;
+    overflow: auto;
     /* Smooth scroll for better UX if needed */
     /* scroll-behavior: smooth; */
 }
@@ -178,6 +179,10 @@ a:hover, .footer-link:hover {
     /* Bulma's .input already handles padding etc. */
     max-width: 500px; /* Limit width */
 }
+#inputField[disabled] {
+    background-color: var(--input-border-color);
+}
+
 #Quran-input-container .field {
      width: 100%; /* Make the group take full width */
      max-width: 700px; /* Control max width of input+button group */
@@ -201,33 +206,49 @@ a:hover, .footer-link:hover {
   -webkit-appearance: none;
   margin: 0;
 }
-.repetition-input[type=number] {
-  -moz-appearance: textfield; /* Firefox */
-}
+/* .repetition-input[type=number] { */
+  /* -moz-appearance: textfield; Firefox */
+/* } */
 
 
-/* Theme Toggle Button */
-#dark-mode-toggle {
-    background: none !important; /* Override Bulma button background */
-    border: none !important;
-    padding: 0.5rem; /* Adjust padding */
+/* Стили для кнопок с изображениями */
+.image-button {
+    background: none !important; /* Убираем фон */
+    border: none !important; /* Убираем рамку */
+    padding: 0.5rem; /* Добавляем немного отступа вокруг иконки для кликабельности */
     cursor: pointer;
+    line-height: 0; /* Предотвращаем влияние высоты строки на размер кнопки */
+    transition: background-color 0.2s ease-in-out; /* Плавный переход для hover */
 }
-.theme-icon {
-     width: 24px; /* Adjust icon size */
-     height: 24px;
-     vertical-align: middle; /* Align icon nicely */
+
+.image-button:hover,
+.image-button:focus {
+    background-color: var(--input-border-color) !important;
+    outline: none;
 }
-#dark-mode-toggle .icon {
-    /* Override Bulma icon color if it interferes */
-    color: inherit !important;
+
+/* Стили для самих иконок внутри кнопок */
+.button-icon {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
 }
-/* Ensure only one icon shows */
+
+/* Переопределяем размер иконки темы, если он отличается */
+#dark-mode-toggle .button-icon {
+    width: 24px;
+    height: 24px;
+}
+
 html.light #dark-mode-icon { display: none; }
 html.light #light-mode-icon { display: inline-block; }
 html.dark #light-mode-icon { display: none; }
 html.dark #dark-mode-icon { display: inline-block; }
 
+html.light #dark-menu-icon { display: none; }
+html.light #light-menu-icon { display: inline-block; }
+html.dark #light-menu-icon { display: none; }
+html.dark #dark-menu-icon { display: inline-block; }
 
 /* Footer */
 .footer {
@@ -351,4 +372,124 @@ html[dir="rtl"] .toastify.on.toastify-right {
 html[dir="rtl"] .toastify.on.toastify-left {
     left: auto;
     right: 15px;
+}
+
+/*-------------------------------------------*\\
+    # SURAH SELECTION TABLE THEME ADAPTATION
+\\*------------------------------------------*/
+#surah-selection-table tbody tr {
+    cursor: pointer; /* Показывает, что строка кликабельна */
+}
+
+/* Стили для контейнера таблицы (если нужно) */
+#surah-selection-section .table-container {
+    max-height: 70vh; /* Ограничиваем высоту, чтобы таблица не была слишком длинной */
+    overflow-y: auto; /* Добавляем прокрутку, если таблица не помещается */
+}
+/* Общие стили таблицы */
+#surah-selection-table {
+    background-color: var(--background-color); /* Основной фон таблицы = фон страницы */
+    color: var(--text-color); /* Основной цвет текста */
+}
+
+/* Стили заголовка таблицы (thead) */
+#surah-selection-table thead {
+    background-color: var(--input-background-color); /* Фон заголовка чуть темнее/светлее фона */
+    border-bottom: 2px solid var(--input-border-color); /* Четкая линия под заголовком */
+}
+
+#surah-selection-table thead th {
+    color: var(--text-color); /* Цвет текста в заголовке */
+    border-color: var(--input-border-color); /* Цвет границ ячеек заголовка */
+    border-width: 0 0 2px 1px; /* Убираем верхнюю/правую, задаем нижнюю/левую */
+    vertical-align: middle; /* Выравнивание по центру */
+}
+#surah-selection-table thead th:first-child {
+     border-left-width: 0; /* Убираем левую границу у первой ячейки */
+}
+
+
+/* Стили тела таблицы (tbody) */
+#surah-selection-table tbody td {
+    color: var(--text-color); /* Цвет текста в ячейках */
+    border-color: var(--input-border-color); /* Цвет границ ячеек */
+    vertical-align: middle; /* Выравнивание по центру */
+}
+
+/* Адаптация для is-bordered */
+#surah-selection-table.is-bordered th,
+#surah-selection-table.is-bordered td {
+    border-color: var(--input-border-color);
+}
+
+/* Адаптация для is-striped (чередующиеся строки) */
+#surah-selection-table.is-striped tbody tr:nth-child(even) {
+    /* Используем цвет фона инпутов для чередования */
+    background-color: var(--input-background-color);
+}
+#surah-selection-table.is-striped tbody tr:nth-child(odd) {
+    /* Явно задаем основной фон для нечетных строк */
+     background-color: var(--background-color);
+}
+
+/* Новый стиль :hover, использующий переменные */
+#surah-selection-table.is-hoverable tbody tr:hover {
+    /* Используем цвет фона футера или другой подходящий для выделения */
+    background-color: var(--footer-background-color) !important; /* Используем !important для переопределения Bulma */
+    /* Убедимся, что текст читаем при наведении */
+    /* Можно оставить --text-color или использовать --footer-text-color, если он отличается */
+    color: var(--text-color) !important;
+}
+
+/* Стиль для контейнера таблицы (ограничение высоты и прокрутка) */
+#surah-selection-section .table-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    border: 1px solid var(--input-border-color); /* Добавляем границу к контейнеру */
+    border-radius: 6px; /* Скругляем углы контейнера (как у Bulma card/input) */
+}
+
+/* Убираем стандартную границу у самой таблицы внутри контейнера, если есть */
+#surah-selection-section .table-container .table {
+    border: none; /* Убираем границу, если она есть у table */
+}
+
+/* Для Firefox */
+#surah-selection-section .table-container {
+    scrollbar-width: thin; /* Делаем скроллбар тонким (альтернативы: 'auto', 'none') */
+    /* Задаем цвет ползунка и фона скроллбара, используя переменные темы */
+    scrollbar-color: var(--button-primary-bg) var(--input-background-color);
+}
+
+/* Для WebKit браузеров (Chrome, Safari, Edge, Opera) */
+
+/* Общий контейнер скроллбара */
+#surah-selection-section .table-container::-webkit-scrollbar {
+    width: 8px;  /* Ширина вертикального скроллбара */
+    height: 8px; /* Высота горизонтального скроллбара (если появится) */
+}
+
+/* Фон (дорожка) скроллбара */
+#surah-selection-section .table-container::-webkit-scrollbar-track {
+    background: var(--input-background-color); /* Цвет фона, чуть отличающийся от основного */
+    border-radius: 4px; /* Небольшое скругление углов */
+    /* border: 1px solid var(--input-border-color); */ /* Опциональная рамка */
+}
+
+/* Ползунок скроллбара */
+#surah-selection-section .table-container::-webkit-scrollbar-thumb {
+    background-color: var(--button-primary-bg); /* Основной цвет ползунка (как у кнопок) */
+    border-radius: 4px; /* Скругление углов, как у дорожки */
+    /* Создаем эффект отступа с помощью рамки цвета фона дорожки */
+    border: 2px solid var(--input-background-color);
+}
+
+/* Ползунок скроллбара при наведении */
+#surah-selection-section .table-container::-webkit-scrollbar-thumb:hover {
+    background-color: var(--button-primary-bg-hover); /* Цвет при наведении (как у кнопок) */
+}
+
+/* Опционально: Углы (если есть и горизонтальный и вертикальный скроллбар) */
+#surah-selection-section .table-container::-webkit-scrollbar-corner {
+  background: var(--input-background-color); /* Цвет угла */
 }

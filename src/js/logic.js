@@ -47,7 +47,11 @@ let noTashkeelContainer = null;
 let inputElement = null;
 let errorCountDisplay = null; 
 let repeatCountInput = null;
-let wordRepeatCountInput = null; // Added
+let wordRepeatCountInput = null;
+let surahSelectionSection = null;
+let mainTypingSection = null;
+let surahSelectionTBody = null;
+let changeSurahButton = null;
 
 // --- Initialization Functions ---
 
@@ -62,6 +66,10 @@ function cacheDOMElements() {
     repeatCountInput = document.getElementById('repeatCountInput');
     wordRepeatCountInput = document.getElementById('wordRepeatCountInput'); // Cache word repeat input
     timerDisplayElement = document.getElementById("timerDisplay");
+    surahSelectionSection = document.getElementById('surah-selection-section');
+    mainTypingSection = document.getElementById('main-typing-section');
+    surahSelectionTBody = document.getElementById('surah-selection-tbody');
+    changeSurahButton = document.getElementById('change-surah-button');
 }
 
 /**
@@ -150,6 +158,10 @@ async function getSurah(surahNumber, startAyah, script) {
     } finally {
          // Hide loading indicator (optional)
         // showLoadingIndicator(false);
+        if (inputElement && !mainTypingSection.classList.contains('is-hidden')) {
+            inputElement.disabled = false;
+            inputElement.focus();
+        }   
     }
 }
 
@@ -798,6 +810,121 @@ function resetTimer() {
 
 // --- КОНЕЦ: Обновленные функции таймера ---
 
+function populateSurahSelectionTable() {
+    if (!PROPERTIES_OF_SURAHS || !PROPERTIES_OF_SURAHS.chapters || !surahSelectionTBody) {
+        console.error("Surah data or table body not available for populating.");
+        // Можно отобразить сообщение об ошибке в таблице
+        surahSelectionTBody.innerHTML = '<tr><td colspan="5">Не удалось загрузить список сур.</td></tr>';
+        return;
+    }
+
+    // Очищаем предыдущие строки (если есть)
+    surahSelectionTBody.innerHTML = '';
+
+    // Заполняем таблицу данными
+    PROPERTIES_OF_SURAHS.chapters.forEach(chapter => {
+        const row = document.createElement('tr');
+        row.setAttribute('data-surah-id', chapter.id); // Сохраняем ID суры для обработчика клика
+
+        // Создаем ячейки для каждой колонки
+        const cellId = document.createElement('td');
+        cellId.textContent = chapter.id;
+
+        const cellNameArabic = document.createElement('td');
+        cellNameArabic.textContent = chapter.name_arabic;
+        cellNameArabic.style.fontFamily = "'IslamicFont', sans-serif"; // Применяем шрифт Корана
+
+        const cellNameSimple = document.createElement('td');
+        cellNameSimple.textContent = chapter.name_simple;
+
+        const cellRevelationPlace = document.createElement('td');
+        cellRevelationPlace.textContent = chapter.revelation_place.charAt(0).toUpperCase() + chapter.revelation_place.slice(1); // Делаем первую букву заглавной
+
+        const cellVersesCount = document.createElement('td');
+        cellVersesCount.textContent = utils.convertToArabicNumber(chapter.verses_count); // Используем арабские цифры
+
+        // Добавляем ячейки в строку
+        row.appendChild(cellId);
+        row.appendChild(cellNameArabic);
+        row.appendChild(cellNameSimple);
+        row.appendChild(cellRevelationPlace);
+        row.appendChild(cellVersesCount);
+        row.appendChild(document.createElement('td'));
+        row.appendChild(document.createElement('td'));
+        row.appendChild(document.createElement('td'));
+        // Сюда можно будет добавить ячейки для доп. информации
+
+        // Добавляем строку в тело таблицы
+        surahSelectionTBody.appendChild(row);
+    });
+
+    // Добавляем обработчик событий на тело таблицы (event delegation)
+    surahSelectionTBody.addEventListener('click', handleSurahSelection);
+}
+
+/**
+ * Handles clicks on the Surah selection table rows.
+ * @param {Event} event - The click event object.
+ */
+function handleSurahSelection(event) {
+    const clickedRow = event.target.closest('tr');
+    if (!clickedRow || !clickedRow.dataset.surahId) {
+        return;
+    }
+
+    const selectedSurahId = parseInt(clickedRow.dataset.surahId, 10);
+    if (!isNaN(selectedSurahId)) {
+        // --- ИЗМЕНЕНО: Просто скрываем таблицу и показываем ввод ---
+        // Прячем таблицу выбора
+        if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden');
+        // Показываем основной интерфейс ввода
+        if (mainTypingSection) mainTypingSection.classList.remove('is-hidden');
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
+        // Загружаем выбранную суру
+        processSearch(`${selectedSurahId}:1`);
+    }
+}
+
+// --- ДОБАВЛЕНО: Функция для переключения видимости секций ---
+/**
+ * Toggles visibility between the main typing interface and the Surah selection table.
+ */
+function toggleSurahSelectionView() {
+    if (!mainTypingSection || !surahSelectionSection) return;
+
+    const isTypingVisible = !mainTypingSection.classList.contains('is-hidden');
+
+    if (isTypingVisible) {
+        // --- Переключаемся С ввода НА выбор суры ---
+        mainTypingSection.classList.add('is-hidden');
+        surahSelectionSection.classList.remove('is-hidden');
+        stopTimer(); // Останавливаем таймер
+        resetTimer(); // Сбрасываем таймер
+        // Очищаем поле поиска и ввода при переходе к выбору суры
+        const surahInputElement = document.getElementById("Surah-selection-input");
+        if (surahInputElement) surahInputElement.value = '';
+        if (inputElement) {
+             inputElement.value = ''; // Очищаем поле ввода текста Корана
+             inputElement.disabled = true; // Блокируем ввод текста Корана
+             inputElement.classList.remove('incorrectWord'); // Убираем стиль ошибки
+        }
+    } else {
+        // --- Переключаемся С выбора суры НА ввод ---
+        surahSelectionSection.classList.add('is-hidden');
+        mainTypingSection.classList.remove('is-hidden');
+        // Разблокируем поле ввода и фокусируемся, если сура уже загружена
+        if (inputElement && quranContainer.hasChildNodes()) { // Проверяем, есть ли контент
+             inputElement.disabled = false;
+             inputElement.focus();
+        } else if (!quranContainer.hasChildNodes()) {
+             // Если сура еще не загружена (например, при первом запуске была ошибка),
+             // можно загрузить суру по умолчанию или оставить поле заблокированным
+             // Давайте загрузим по умолчанию для надежности
+             processSearch("1:1");
+        }
+    }
+}
 // --- Event Listeners Setup ---
 
 /**
@@ -870,6 +997,10 @@ function addListeners() {
     document.addEventListener("DOMContentLoaded", () => {
         inputElement.focus();
     });
+
+    if (changeSurahButton) {
+        changeSurahButton.addEventListener('click', toggleSurahSelectionView);
+    };
 }
 
 // --- Application Entry Point ---
@@ -881,25 +1012,35 @@ function addListeners() {
  * @param {string} [initialScript='uthmani'] - Initial script.
  */
 function runApp(initialSurah = 1, initialAyah = 1, initialScript = 'uthmani') {
-    cacheDOMElements(); // Cache elements first
-    // Инициализация темы происходит ДО получения данных
+    cacheDOMElements();
     utils.initDarkMode(isDarkMode);
-    addListeners(); // Добавляем слушатели
+    addListeners();
 
     setupSurahData()
         .then(() => {
-            // Set initial search query state *before* calling getSurah
+            // Заполняем таблицу В ФОНЕ (она пока скрыта)
+            populateSurahSelectionTable();
+
+            // --- Возвращаем загрузку суры по умолчанию ---
             currentSearchQuery = `${initialSurah}:${initialAyah}`;
-            // Убеждаемся, что поле ввода активно перед первой загрузкой
             if(inputElement) inputElement.disabled = false;
+            // Убедимся, что секция ввода видима, а выбора - скрыта ПЕРЕД загрузкой суры
+             if (mainTypingSection) mainTypingSection.classList.remove('is-hidden');
+             if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden');
+             // Загружаем суру
             getSurah(initialSurah, initialAyah, initialScript);
+            // --- Конец возврата ---
+
         })
         .catch(error => {
             console.error('Error during application initialization:', error);
             showToast("Failed to initialize application data. Please refresh.");
-            // Display error state in UI?
+             // Показываем ошибку, например, в основной секции
+             if (mainTypingSection) mainTypingSection.classList.remove('is-hidden'); // Показать секцию
+             if (quranContainer) quranContainer.innerHTML = '<p class="has-text-danger has-text-centered">Ошибка загрузки данных. Попробуйте обновить страницу.</p>'; // Сообщение об ошибке
+             if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden'); // Скрыть секцию выбора
             if(errorCountDisplay) errorCountDisplay.textContent = "Error";
-            if(inputElement) inputElement.disabled = true; // Отключаем ввод при ошибке инициализации
+            if(inputElement) inputElement.disabled = true;
         });
 }
 

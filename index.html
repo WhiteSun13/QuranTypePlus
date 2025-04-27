@@ -65,16 +65,50 @@
                         </div>
                     </div>
                 </div>
-                 <div class="level-item">
-                     <!-- Theme Toggle -->
-                    <button class="button is-text" id="dark-mode-toggle" aria-label="Toggle theme">
-                        <img src="public/images/LanternLight.svg" alt="Light Mode" id="light-mode-icon" class="theme-icon">
-                        <img src="public/images/LanternDark.svg" alt="Dark Mode" id="dark-mode-icon" class="theme-icon" style="display: none;">
+                <div class="level-item">
+                    <!-- Theme Toggle (оставляем только изображения внутри кнопки) -->
+                   <button class="button is-text image-button" id="dark-mode-toggle" aria-label="Toggle theme" title="Сменить тему"> <!-- Добавляем is-text, image-button, title -->
+                       <img src="public/images/LanternLight.svg" alt="Light Mode" id="light-mode-icon" class="theme-icon button-icon">
+                       <img src="public/images/LanternDark.svg" alt="Dark Mode" id="dark-mode-icon" class="theme-icon button-icon" style="display: none;">
+                   </button>
+               </div>
+                <div class="level-item">
+                    <!-- Кнопка Изменить Суру -->
+                    <button class="button is-text image-button" id="change-surah-button" aria-label="Изменить Суру" title="Изменить Суру">
+                        <img src="public/images/MenuLight.svg" alt="Изменить Суру" id="light-menu-icon" class="button-icon"> 
+                        <img src="public/images/MenuDark.svg" alt="Dark Mode" id="dark-menu-icon" class="theme-icon button-icon">
                     </button>
                 </div>
             </div>
         </nav>
     </section>
+
+    <section class="section pt-4 pb-4 is-hidden" id="surah-selection-section">
+        <div class="container">
+            <div class="table-container">
+                <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth" id="surah-selection-table">
+                    <thead>
+                        <tr>
+                            <th>#</th> <!-- Номер суры -->
+                            <th>سورة</th>
+                            <th>Surah</th>
+                            <th>Place</th>
+                            <th>Ayah</th>
+                            <th>Time</th>
+                            <th>No missclick</th>
+                            <th>Rank</th>
+                        </tr>
+                    </thead>
+                    <tbody id="surah-selection-tbody">
+                        <!-- Строки будут добавлены динамически с помощью JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Оберните существующий основной контент в этот div -->
+    <div id="main-typing-section">
 
     <section class="section pt-2 pb-5">
         <div class="container has-text-centered">
@@ -130,6 +164,7 @@
             </div>
         </div>
     </section>
+</div>
 
     <footer class="footer pt-5 pb-5">
         <div class="content has-text-centered">
@@ -145,7 +180,7 @@
                 <div class="level-item has-text-centered">
                     <div id="timerContainer">
                         <span id="timerLabel" class="has-text-weight-bold">Time: </span>
-                        <span id="timerDisplay" class="has-text-weight-bold">00:00</span>
+                        <span id="timerDisplay" class="has-text-weight-bold">00:00:00.000</span>
                     </div>
                 </div>
                 <!-- Copyright -->
