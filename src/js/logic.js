@@ -4,6 +4,7 @@ const BASMALLA = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلر�
 // Added ayah marker start '﴿' to the list for easier checking
 const QURAN_SYMBOLS = ["۞", "﴾","﴿", "۩", 'ۖ', 'ۗ', 'ۘ', 'ۙ', 'ۚ', ' ۛ' , 'ۜ', 'ۛ ']
 let PROPERTIES_OF_SURAHS = null
+const TARGET_CPM = 400;
 
 // --- UI State ---
 // Определяем предпочтения пользователя ИЛИ сохраненное значение
@@ -34,12 +35,18 @@ let totalErrors = 0; // Cumulative errors for the current Surah/Ayah segment
 // --- Timer State ---
 let timerInterval = null; // Stores the interval ID for the timer
 let startTime = null;  // Stores the timestamp when the timer started
+let endTime = null; // Stores the timestamp when the timer stopped
 let timerDisplayElement = null; // Cache timer display element
 
 // --- Auto-Scroll Detection State ---
 let originalTopOffset = 0 // Top offset of the first line
 let secondRowTopOffset = 0 // Top offset of the second line (once it appears)
 let refWord = null // Reference word span used for hiding previous lines
+
+let totalCharsInSegment = 0; // Общее количество символов в текущем сегменте для расчета CPM
+let acpmDisplay = null;
+let scoreDisplay = null;
+let rankDisplay = null;
 
 // --- DOM Element References (Cache frequently used elements) ---
 let quranContainer = null;
@@ -70,6 +77,9 @@ function cacheDOMElements() {
     mainTypingSection = document.getElementById('main-typing-section');
     surahSelectionTBody = document.getElementById('surah-selection-tbody');
     changeSurahButton = document.getElementById('change-surah-button');
+    acpmDisplay = document.getElementById("acpmDisplay");
+    scoreDisplay = document.getElementById("scoreDisplay");
+    rankDisplay = document.getElementById("rankDisplay");
 }
 
 /**
@@ -113,6 +123,11 @@ async function getSurah(surahNumber, startAyah, script) {
 
     totalErrors = 0; // Reset error count
     updateErrorDisplay(); // Update the display to show 0 errors
+
+    // ДОБАВИТЬ: Сброс количества символов
+    totalCharsInSegment = 0;
+    // ДОБАВИТЬ: Сброс отображения результатов
+    resetResultsDisplay();
 
     originalTopOffset = 0;
     secondRowTopOffset = 0;
@@ -232,6 +247,14 @@ function displaySurahFromJson(data, startAyah, script) {
         
         const noTashkeelString = utils.createNoTashkeelString(noTashkeelAyahs);
         utils.fillContainer(noTashkeelString, noTashkeelContainer); // Use utility for hidden div
+
+        // ДОБАВИТЬ: Рассчитываем общее кол-во символов для CPM
+        // Используем длину строки без ташкиля, так как именно ее сравниваем при вводе.
+        // Удаляем пробелы для более точного подсчета символов (опционально, зависит от того, считать ли пробелы)
+        // Если считать пробелы, просто используем noTashkeelString.length
+        totalCharsInSegment = noTashkeelString.replace(/\s/g, '').length;
+        // Или если пробелы считать: totalCharsInSegment = noTashkeelString.length;
+        // console.log("Total characters for segment:", totalCharsInSegment); // Для отладки
 
         originalTopOffset = utils.getOriginalTopOffset(quranContainer);
         secondRowTopOffset = 0; 
@@ -408,6 +431,7 @@ function handleNextWord(wordSpans) {
         // Мы обработали последнее слово/символ и вышли за пределы массива
         showToast("Surah Segment Complete!"); // Показываем сообщение о завершении
         stopTimer();
+        calculateAndDisplayResults();
         inputElement.disabled = true; // Опционально: отключаем поле ввода
         console.log("End of text reached."); // Для отладки
         return; // Прекращаем дальнейшую обработку, так как текст закончился
@@ -424,6 +448,7 @@ function handleNextWord(wordSpans) {
         // Мы обработали последний символ (который был пропущен) и вышли за пределы
         showToast("Surah Segment Complete!"); // Показываем сообщение о завершении
         stopTimer();
+        calculateAndDisplayResults();
         inputElement.disabled = true; // Опционально: отключаем поле ввода
         console.log("End of text reached after skipping symbols."); // Для отладки
         return; // Прекращаем дальнейшую обработку
@@ -750,8 +775,8 @@ function updateTimerDisplay() {
     // Не обновлять, если таймер не запущен или элемент не найден
     if (!startTime || !timerDisplayElement) return;
 
-    // Вычисляем прошедшее время в миллисекундах
-    const now = Date.now();
+    // Используем endTime если таймер остановлен, иначе текущее время
+    const now = endTime ? endTime : Date.now();
     const elapsedMilliseconds = now - startTime;
 
     // Форматируем и отображаем время с помощью обновленной утилиты
@@ -764,7 +789,7 @@ function updateTimerDisplay() {
 function startTimer() {
     // Запускаем, только если таймер еще не запущен (startTime не установлен)
     if (startTime !== null) {
-        // console.log("Timer already running."); // Для отладки
+        console.log("Timer already running.");
         return;
     }
 
@@ -774,6 +799,7 @@ function startTimer() {
     }
     // Записываем время начала
     startTime = Date.now();
+    endTime = null; // Сбрасываем время окончания при старте
     // Немедленно обновляем дисплей (покажет 00:00:00.000)
     updateTimerDisplay();
     // Устанавливаем интервал для частого обновления (например, каждые 50мс)
@@ -789,9 +815,10 @@ function stopTimer() {
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
-         // Выполним последнее обновление для точности, так как интервал мог сработать позже
-         updateTimerDisplay();
-        // console.log("Timer stopped"); // Для отладки
+        endTime = Date.now();
+        // Выполним последнее обновление для точности, так как интервал мог сработать позже
+        updateTimerDisplay();
+        console.log("Timer stopped at:", endTime); // Для отладки
     }
 }
 
@@ -801,8 +828,9 @@ function stopTimer() {
 function resetTimer() {
     stopTimer(); // Останавливаем таймер
     startTime = null; // !!! Важно: Сбрасываем startTime, чтобы startTimer сработал при следующем вводе
+    endTime = null; // Сбрасываем и время окончания
     if (timerDisplayElement) {
-        // Сбрасываем текст на дисплее в новый формат
+        // Сбрасываем текст на дисплее
         timerDisplayElement.textContent = "00:00:00.000";
     }
     // console.log("Timer reset"); // Для отладки
@@ -849,7 +877,6 @@ function populateSurahSelectionTable() {
         row.appendChild(cellNameSimple);
         row.appendChild(cellRevelationPlace);
         row.appendChild(cellVersesCount);
-        row.appendChild(document.createElement('td'));
         row.appendChild(document.createElement('td'));
         row.appendChild(document.createElement('td'));
         // Сюда можно будет добавить ячейки для доп. информации
@@ -899,8 +926,8 @@ function toggleSurahSelectionView() {
         // --- Переключаемся С ввода НА выбор суры ---
         mainTypingSection.classList.add('is-hidden');
         surahSelectionSection.classList.remove('is-hidden');
-        stopTimer(); // Останавливаем таймер
-        resetTimer(); // Сбрасываем таймер
+        stopTimer();
+        // resetTimer(); 
         // Очищаем поле поиска и ввода при переходе к выбору суры
         const surahInputElement = document.getElementById("Surah-selection-input");
         if (surahInputElement) surahInputElement.value = '';
@@ -925,6 +952,57 @@ function toggleSurahSelectionView() {
         }
     }
 }
+
+/**
+ * Calculates and displays the final results (CPM, Score, Rank)
+ */
+function calculateAndDisplayResults() {
+    if (!startTime || !endTime) {
+        console.warn("Cannot calculate results: Timer was not stopped properly.");
+        resetResultsDisplay(); // Сбрасываем отображение, если времени нет
+        return;
+    }
+
+    const elapsedMilliseconds = endTime - startTime;
+    const numberOfErrors = totalErrors;
+    const numberOfChars = totalCharsInSegment; // Используем сохраненное значение
+
+    // Проверка на валидность данных перед расчетом
+    if (numberOfChars <= 0) {
+        console.warn("Cannot calculate results: No characters in the segment.");
+        resetResultsDisplay(); // Сбрасываем, если нет символов
+        return;
+    }
+
+    // 1. Базовые метрики
+    const cpm = utils.calculateCPM(numberOfChars, elapsedMilliseconds);
+    const errorRate = utils.calculateErrorRate(numberOfErrors, numberOfChars);
+    const adjustedCPM = utils.calculateAdjustedCPM(cpm, numberOfErrors);
+
+    // 2. Итоговый балл
+    const score = utils.calculateScore(adjustedCPM, TARGET_CPM);
+
+    // 3. Ранг
+    const rank = utils.determineRank(score, adjustedCPM, TARGET_CPM, errorRate);
+
+    // 4. Отображение результатов
+    if (acpmDisplay) acpmDisplay.textContent = Math.round(adjustedCPM); // Отображаем округленный aCPM
+    if (scoreDisplay) scoreDisplay.textContent = `${score}%`; // Отображаем счет с %
+    if (rankDisplay) rankDisplay.textContent = rank; // Отображаем ранг
+
+    console.log(`CPM: ${cpm}, ER: ${errorRate}%, aCPM: ${adjustedCPM}, Score: ${score}, Rank: ${rank}`); // Для отладки
+}
+
+// ДОБАВИТЬ НОВУЮ ФУНКЦИЮ
+/**
+ * Resets the result display elements to their initial state.
+ */
+function resetResultsDisplay() {
+    if (acpmDisplay) acpmDisplay.textContent = "-";
+    if (scoreDisplay) scoreDisplay.textContent = "-";
+    if (rankDisplay) rankDisplay.textContent = "-";
+}
+
 // --- Event Listeners Setup ---
 
 /**
@@ -1015,6 +1093,7 @@ function runApp(initialSurah = 1, initialAyah = 1, initialScript = 'uthmani') {
     cacheDOMElements();
     utils.initDarkMode(isDarkMode);
     addListeners();
+    resetResultsDisplay();
 
     setupSurahData()
         .then(() => {
@@ -1035,12 +1114,16 @@ function runApp(initialSurah = 1, initialAyah = 1, initialScript = 'uthmani') {
         .catch(error => {
             console.error('Error during application initialization:', error);
             showToast("Failed to initialize application data. Please refresh.");
+            resetResultsDisplay();
              // Показываем ошибку, например, в основной секции
              if (mainTypingSection) mainTypingSection.classList.remove('is-hidden'); // Показать секцию
-             if (quranContainer) quranContainer.innerHTML = '<p class="has-text-danger has-text-centered">Ошибка загрузки данных. Попробуйте обновить страницу.</p>'; // Сообщение об ошибке
+             if (quranContainer) quranContainer.innerHTML = '<p class="has-text-danger has-text-centered">Error loading data. Try refreshing the page.</p>'; // Сообщение об ошибке
              if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden'); // Скрыть секцию выбора
             if(errorCountDisplay) errorCountDisplay.textContent = "Error";
             if(inputElement) inputElement.disabled = true;
+            if(acpmDisplay) acpmDisplay.textContent = "Error"; // Доп. индикация
+            if(scoreDisplay) scoreDisplay.textContent = "Error";
+            if(rankDisplay) rankDisplay.textContent = "Error";
         });
 }
 

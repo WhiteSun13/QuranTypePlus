@@ -70,8 +70,8 @@
                    </button>
                     <!-- Кнопка Изменить Суру -->
                     <button class="button is-text image-button" id="change-surah-button" aria-label="Изменить Суру" title="Изменить Суру">
-                        <img src="public/images/MenuLight.svg" alt="Изменить Суру" id="light-menu-icon" class="button-icon"> 
-                        <img src="public/images/MenuDark.svg" alt="Dark Mode" id="dark-menu-icon" class="theme-icon button-icon">
+                        <img src="public/images/MenuLight.svg" alt="Menu" id="light-menu-icon" class="button-icon"> 
+                        <img src="public/images/MenuDark.svg" alt="Menu" id="dark-menu-icon" class="theme-icon button-icon">
                     </button>
                 </div>
             </div>
@@ -90,7 +90,6 @@
                             <th>Period</th>
                             <th>Ayah</th>
                             <th>Time</th>
-                            <th>No missclick</th>
                             <th>Rank</th>
                         </tr>
                     </thead>
@@ -178,9 +177,26 @@
                         <span id="timerDisplay" class="has-text-weight-bold">00:00:00.000</span>
                     </div>
                 </div>
-                <!-- Copyright -->
+                <!-- ДОБАВИТЬ: Adjusted CPM -->
                 <div class="level-item has-text-centered">
-                     <p id="Copyright">Copyright © 2024 Quran Type. All rights reserved.</p>
+                    <div id="acpmContainer">
+                        <span id="acpmLabel" class="has-text-weight-bold">aCPM: </span>
+                        <span id="acpmDisplay" class="has-text-weight-bold">-</span>
+                    </div>
+                </div>
+                <!-- ДОБАВИТЬ: Score -->
+                <div class="level-item has-text-centered">
+                    <div id="scoreContainer">
+                        <span id="scoreLabel" class="has-text-weight-bold">Score: </span>
+                        <span id="scoreDisplay" class="has-text-weight-bold">-</span>
+                    </div>
+                </div>
+                <!-- ДОБАВИТЬ: Rank -->
+                <div class="level-item has-text-centered">
+                    <div id="rankContainer">
+                        <span id="rankLabel" class="has-text-weight-bold">Rank: </span>
+                        <span id="rankDisplay" class="has-text-weight-bold">-</span>
+                    </div>
                 </div>
                  <!-- Links -->
                  <div class="level-item has-text-centered">

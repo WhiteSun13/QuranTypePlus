@@ -4,13 +4,13 @@ export function convertToArabicNumber(englishNumber) {
     const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
     const englishDigits = "0123456789";
     const englishToArabicMap = {};
-  
+
     for (let i = 0; i < englishDigits.length; i++) {
-      englishToArabicMap[englishDigits[i]] = arabicNumbers[i];
+        englishToArabicMap[englishDigits[i]] = arabicNumbers[i];
     }
-  
+
     const arabicNumber = englishNumber.replace(/\d/g, (match) => englishToArabicMap[match]);
-  
+
     return arabicNumber;
 }
 
@@ -34,27 +34,27 @@ export function removeTashkeel(text) {
     // fix an issue with the ya encoding
     // (persian for some reason). Note this replaces all normal ya, but also the ya for alef layena.
     //  so for something like فى it is written في. Not sure if this is fine, check with someone arabic literate
-    noTashkeel = noTashkeel.replace(/\u06CC/g,'\u064A');  
+    noTashkeel = noTashkeel.replace(/\u06CC/g, '\u064A');
 
     // handle hamza above the line extender char. (the part below removes this char, so we have to handle here.)
-    noTashkeel = noTashkeel.replace(/\u0640\u0654/g,'\u0626'); // ya
+    noTashkeel = noTashkeel.replace(/\u0640\u0654/g, '\u0626'); // ya
 
 
     // this removes everything that isnt a main char, or a hamza above or below, or a spacebar
     // noTashkeel = noTashkeel.replace(/[^\u0621-\u063A\u0641-\u064A\u0654-\u0655 ]/g, '');
     noTashkeel = noTashkeel.replace(/[^\u0621-\u063A\u0641-\u064A\u0654-\u0655 ]/g, '');
-    
+
     // // change the ya with hamza underneath and to ya with hamza above as this is available on keyboard
-    noTashkeel = noTashkeel.replace(/\u0649\u0655/g,'\u0626');
+    noTashkeel = noTashkeel.replace(/\u0649\u0655/g, '\u0626');
 
     // fixes a bug with words like: الأيات . the lam then alef then hamza causes an issue.
-    noTashkeel = noTashkeel.replace(/\u0654\u0627/g,'\u0623');
-    noTashkeel = noTashkeel.replace(/\u0655\u0627/g,'\u0625');
-    
+    noTashkeel = noTashkeel.replace(/\u0654\u0627/g, '\u0623');
+    noTashkeel = noTashkeel.replace(/\u0655\u0627/g, '\u0625');
+
     // for ya and waw with hamza above (Havent checked if they apply). 
-    noTashkeel = noTashkeel.replace(/\u0654\u0648/g,'\u0624'); // waw
-    noTashkeel = noTashkeel.replace(/\u0654\u064A/g,'\u0626'); // ya
-    
+    noTashkeel = noTashkeel.replace(/\u0654\u0648/g, '\u0624'); // waw
+    noTashkeel = noTashkeel.replace(/\u0654\u064A/g, '\u0626'); // ya
+
     return noTashkeel
 }
 
@@ -123,18 +123,18 @@ export function handleHiddenWords(wordSpans, referenceSpan) {
 export function clearContainer(container) {
     while (container.firstChild) {
         container.removeChild(container.firstChild);
-      }
+    }
 }
 
 export function getTransitionDuration(element) {
     // Get the computed style of the element
     const style = window.getComputedStyle(element);
-    
+
     // Extract the 'transition-duration' property value
     const transitionDuration = style.getPropertyValue('transition-duration');
-  
+
     // Convert the string value to a number in milliseconds
-   return parseFloat(transitionDuration) * 1000;  
+    return parseFloat(transitionDuration) * 1000;
 }
 
 // Using this now for the tashkeel container.
@@ -144,11 +144,11 @@ export function fillContainer(surahContent, container) {
     // turn each word into a span
     const words = surahContent.split(" ")
     // console.log(words.join(" "));
-    
+
 
     words.forEach((word) => {
         const wordSpan = document.createElement("span");
-        wordSpan.textContent = `${word  } `
+        wordSpan.textContent = `${word} `
         container.appendChild(wordSpan)
 
         // temp
@@ -174,10 +174,10 @@ export function initDarkMode(isDarkMode) {
         if (lightIcon) lightIcon.style.display = 'inline-block';
         if (darkIcon) darkIcon.style.display = 'none';
     }
-     // Сохраняем начальное состояние в localStorage, если его нет
-     if (localStorage.getItem('darkMode') === null) {
+    // Сохраняем начальное состояние в localStorage, если его нет
+    if (localStorage.getItem('darkMode') === null) {
         localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
-     }
+    }
 }
 
 // Function to toggle dark mode
@@ -235,7 +235,110 @@ export function formatTime(elapsedMilliseconds) {
     return `${formattedHours}:${formattedMinutes}:${formattedSeconds}.${formattedMilliseconds}`;
 }
 
-// Exporting all functions under a single object
+// ДОБАВИТЬ ЭТУ ФУНКЦИЮ
+/**
+ * Clamps a number between a minimum and maximum value.
+ * @param {number} value The number to clamp.
+ * @param {number} min The minimum allowed value.
+ * @param {number} max The maximum allowed value.
+ * @returns {number} The clamped number.
+ */
+export function clamp(value, min, max) {
+    return Math.max(min, Math.min(value, max));
+}
+
+// ДОБАВИТЬ ЭТУ ФУНКЦИЮ
+/**
+ * Calculates Characters Per Minute (CPM).
+ * @param {number} totalChars Total number of characters typed (or expected).
+ * @param {number} elapsedMilliseconds Total elapsed time in milliseconds.
+ * @returns {number} The calculated CPM. Returns 0 if time is 0.
+ */
+export function calculateCPM(totalChars, elapsedMilliseconds) {
+    if (elapsedMilliseconds <= 0) {
+        return 0; // Avoid division by zero or negative time
+    }
+    const timeInMinutes = elapsedMilliseconds / 60000; // Convert ms to minutes
+    return totalChars / timeInMinutes;
+}
+
+// ДОБАВИТЬ ЭТУ ФУНКЦИЮ
+/**
+ * Calculates the Error Rate (ER) as a percentage.
+ * @param {number} totalErrors Total number of errors made.
+ * @param {number} totalChars Total number of characters typed (or expected).
+ * @returns {number} The error rate percentage. Returns 0 if no characters were typed.
+ */
+export function calculateErrorRate(totalErrors, totalChars) {
+    if (totalChars <= 0) {
+        return 0; // Avoid division by zero
+    }
+    return (totalErrors / totalChars) * 100;
+}
+
+// ДОБАВИТЬ ЭТУ ФУНКЦИЮ
+/**
+ * Calculates the Adjusted CPM (aCPM) after applying penalty for errors.
+ * @param {number} cpm The raw Characters Per Minute.
+ * @param {number} totalErrors Total number of errors made.
+ * @returns {number} The adjusted CPM, cannot be less than 0.
+ */
+export function calculateAdjustedCPM(cpm, totalErrors) {
+    const penalty = totalErrors; // Penalty is 1 CPM per error
+    return Math.max(0, cpm - penalty);
+}
+
+// ДОБАВИТЬ ЭТУ ФУНКЦИЮ
+/**
+ * Calculates the final score based on aCPM and a target CPM.
+ * @param {number} aCPM The adjusted Characters Per Minute.
+ * @param {number} targetCPM The target CPM for a 100% score.
+ * @returns {number} The final score (0-100).
+ */
+export function calculateScore(aCPM, targetCPM) {
+    if (targetCPM <= 0) {
+        return 0; // Avoid division by zero if targetCPM is invalid
+    }
+    const rawScore = (aCPM / targetCPM) * 100;
+    const roundedScore = Math.round(rawScore);
+    return clamp(roundedScore, 0, 100); // Clamp the score between 0 and 100
+}
+
+// ДОБАВИТЬ ЭТУ ФУНКЦИЮ
+/**
+ * Determines the rank based on Score, aCPM, TargetCPM, and Error Rate.
+ * @param {number} score The calculated score (0-100).
+ * @param {number} aCPM The adjusted Characters Per Minute.
+ * @param {number} targetCPM The target CPM.
+ * @param {number} errorRate The calculated error rate percentage.
+ * @returns {string} The rank ('S', 'A', 'B', 'C', 'D').
+ */
+export function determineRank(score, aCPM, targetCPM, errorRate) {
+    if (targetCPM <= 0) return 'D'; // Default rank if targetCPM is invalid
+
+    const acpmRatio = aCPM / targetCPM;
+
+    // Check S rank first (most strict)
+    if (score >= 95 && acpmRatio >= 0.95 && errorRate === 0) {
+        return 'S';
+    }
+    // Check A rank
+    if (score >= 80 && score <= 94 && acpmRatio >= 0.8 && acpmRatio < 0.95 && errorRate <= 1) {
+        return 'A';
+    }
+    // Check B rank
+    if (score >= 60 && score <= 79 && acpmRatio >= 0.6 && acpmRatio < 0.8 && errorRate <= 3) {
+        return 'B';
+    }
+    // Check C rank
+    if (score >= 40 && score <= 59 && acpmRatio >= 0.4 && acpmRatio < 0.6 && errorRate <= 5) {
+        return 'C';
+    }
+    // Default to D rank if none of the above conditions are met
+    return 'D';
+}
+
+// Обновляем объект экспорта по умолчанию, чтобы включить новые функции
 export default {
     convertToArabicNumber,
     createNoTashkeelString,
@@ -250,4 +353,10 @@ export default {
     toggleDarkMode,
     initDarkMode,
     formatTime,
+    clamp,
+    calculateCPM,
+    calculateErrorRate,
+    calculateAdjustedCPM,
+    calculateScore,
+    determineRank,
 };
