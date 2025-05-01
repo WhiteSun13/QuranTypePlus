@@ -153,9 +153,6 @@ async function getSurah(surahNumber, startAyah, script) {
     // Если сура загружена через поиск, а не кнопку Start, currentSurahId может быть не установлен.
     // Установим его здесь для корректного сохранения, если пользователь завершит печатать.
     currentSurahId = surahNumber;
-    // Можно также сбросить currentMode на 'normal', если это предполагаемое поведение для поиска.
-    currentMode = 'UserSearch'; // Раскомментировать, если поиск всегда должен быть 'normal'
-    applyModeSettings(); // Применить настройки для 'normal' режима
 
     // Constructing the API URL
     const baseApiUrl = 'https://api.quran.com/api/v4';
@@ -188,8 +185,8 @@ async function getSurah(surahNumber, startAyah, script) {
         console.error('Error fetching verses:', error);
         showToast("Error fetching Surah data. Please try again.");
     } finally {
-         // Hide loading indicator (optional)
-        // showLoadingIndicator(false);
+        console.log(currentMode);
+        applyModeSettings();
         if (inputElement && !mainTypingSection.classList.contains('is-hidden')) {
             inputElement.disabled = false;
             inputElement.focus();
@@ -316,7 +313,7 @@ function displaySurahFromJson(data, startAyah, script) {
          applyModeSettings();
 
         // Apply initial hide state if active (только если режим нормальный)
-        if (currentMode === 'normal' && isHideAyahsButtonActive) {
+        if (isHideAyahsButtonActive) {
              applyHideAyahsVisibility();
         }
 
@@ -1288,11 +1285,13 @@ function addListeners() {
     const surahProcessButton = document.getElementById("Display-Surah-button");
 
     surahProcessButton.addEventListener("click", () => {
+        currentMode = 'UserSearch';
         processSearch(surahInputElement.value);
     });
     surahInputElement.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
             event.preventDefault(); 
+            currentMode = 'UserSearch';
             processSearch(surahInputElement.value);
         }
     });
