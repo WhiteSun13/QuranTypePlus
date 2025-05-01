@@ -43,6 +43,10 @@ let originalTopOffset = 0 // Top offset of the first line
 let secondRowTopOffset = 0 // Top offset of the second line (once it appears)
 let refWord = null // Reference word span used for hiding previous lines
 
+// --- Ranking ---
+let currentMode = 'normal'; // 'normal' or 'blind' - Текущий выбранный режим
+let currentSurahId = null; // ID текущей запущенной суры для сохранения результатов
+const RESULTS_STORAGE_KEY = 'quranTypePlusResults'; // Ключ для Local Storage
 let totalCharsInSegment = 0; // Общее количество символов в текущем сегменте для расчета CPM
 let acpmDisplay = null;
 let scoreDisplay = null;
@@ -59,6 +63,7 @@ let surahSelectionSection = null;
 let mainTypingSection = null;
 let surahSelectionTBody = null;
 let changeSurahButton = null;
+let hideAyahsButton = null; // Добавим ссылку на кнопку Hide Ayahs
 
 // --- Initialization Functions ---
 
@@ -77,6 +82,7 @@ function cacheDOMElements() {
     mainTypingSection = document.getElementById('main-typing-section');
     surahSelectionTBody = document.getElementById('surah-selection-tbody');
     changeSurahButton = document.getElementById('change-surah-button');
+    hideAyahsButton = document.getElementById('hideAyahsButton');
     acpmDisplay = document.getElementById("acpmDisplay");
     scoreDisplay = document.getElementById("scoreDisplay");
     rankDisplay = document.getElementById("rankDisplay");
@@ -140,6 +146,16 @@ async function getSurah(surahNumber, startAyah, script) {
     // Reset hide words state visually if needed (e.g., button text)
     // if (isHideAyahsButtonActive) { handleHideAyahsButton(); } // Toggle off if desired
 
+    // ДОБАВИТЬ: Устанавливаем ID суры, если она загружается через поиск
+    // Мы не меняем currentMode здесь, он устанавливается только при клике на кнопку Start в таблице
+    // Если пользователь ищет вручную, можно считать это 'normal' режимом по умолчанию?
+    // Или нужно как-то дать выбрать режим и для поиска? Пока оставим как есть.
+    // Если сура загружена через поиск, а не кнопку Start, currentSurahId может быть не установлен.
+    // Установим его здесь для корректного сохранения, если пользователь завершит печатать.
+    currentSurahId = surahNumber;
+    // Можно также сбросить currentMode на 'normal', если это предполагаемое поведение для поиска.
+    currentMode = 'UserSearch'; // Раскомментировать, если поиск всегда должен быть 'normal'
+    applyModeSettings(); // Применить настройки для 'normal' режима
 
     // Constructing the API URL
     const baseApiUrl = 'https://api.quran.com/api/v4';
@@ -165,6 +181,7 @@ async function getSurah(surahNumber, startAyah, script) {
             startAyah = 1;
         }
 
+        applyModeSettings(); // Вызываем здесь тоже на всякий случай
         displaySurahFromJson(data, startAyah, script);
 
     } catch (error) {
@@ -176,7 +193,28 @@ async function getSurah(surahNumber, startAyah, script) {
         if (inputElement && !mainTypingSection.classList.contains('is-hidden')) {
             inputElement.disabled = false;
             inputElement.focus();
-        }   
+        }
+    }
+}
+
+/**
+ * Применяет настройки UI в зависимости от текущего режима (currentMode).
+ * В основном, скрывает/показывает кнопку "Hide Ayahs".
+ */
+function applyModeSettings() {
+    if (!hideAyahsButton) return; // Убедимся, что кнопка найдена
+
+    if (currentMode === 'blind') {
+        hideAyahsButton.style.display = 'none'; // Скрываем кнопку в слепом режиме
+        // Убедимся, что текст НЕ скрыт принудительно, если пользователь переключился на слепой режим
+        // после активации кнопки Hide в нормальном режиме
+        if (!isHideAyahsButtonActive) {
+             handleHideAyahsButton(); // "Нажимаем" кнопку, чтобы показать аяты, если были скрыты
+        }
+    } else { // currentMode === 'normal'
+        hideAyahsButton.style.display = ''; // Показываем кнопку в нормальном режиме (сброс на display по умолчанию)
+        // Состояние кнопки (нажата/не нажата) сохраняется из переменной isHideAyahsButtonActive
+        // и применяется в applyHideAyahsVisibility при необходимости
     }
 }
 
@@ -275,9 +313,17 @@ function displaySurahFromJson(data, startAyah, script) {
          currentAyahStartIndex_Main = 0; 
          currentAyahStartIndex_NoTashkeel = 0;
 
-         // Apply initial hide state if active
-         if (isHideAyahsButtonActive) {
+         applyModeSettings();
+
+        // Apply initial hide state if active (только если режим нормальный)
+        if (currentMode === 'normal' && isHideAyahsButtonActive) {
              applyHideAyahsVisibility();
+        }
+
+        // ДОБАВИТЬ: Фокусировка на поле ввода после готовности
+         if (inputElement && !mainTypingSection.classList.contains('is-hidden')) {
+             inputElement.disabled = false;
+             inputElement.focus();
          }
     });
 }
@@ -836,18 +882,17 @@ function resetTimer() {
     // console.log("Timer reset"); // Для отладки
 }
 
-// --- КОНЕЦ: Обновленные функции таймера ---
-
 function populateSurahSelectionTable() {
     if (!PROPERTIES_OF_SURAHS || !PROPERTIES_OF_SURAHS.chapters || !surahSelectionTBody) {
         console.error("Surah data or table body not available for populating.");
         // Можно отобразить сообщение об ошибке в таблице
-        surahSelectionTBody.innerHTML = '<tr><td colspan="5">Не удалось загрузить список сур.</td></tr>';
+        surahSelectionTBody.innerHTML = '<tr><td colspan="15">Не удалось загрузить список сур.</td></tr>';
         return;
     }
 
     // Очищаем предыдущие строки (если есть)
     surahSelectionTBody.innerHTML = '';
+    const allResults = loadAllResults();
 
     // Заполняем таблицу данными
     PROPERTIES_OF_SURAHS.chapters.forEach(chapter => {
@@ -877,39 +922,97 @@ function populateSurahSelectionTable() {
         row.appendChild(cellNameSimple);
         row.appendChild(cellRevelationPlace);
         row.appendChild(cellVersesCount);
-        row.appendChild(document.createElement('td'));
-        row.appendChild(document.createElement('td'));
-        // Сюда можно будет добавить ячейки для доп. информации
+        
+        // --- Ячейки для режимов (Normal: 5-8, Blind: 9-12) ---
+        ['normal', 'blind'].forEach(mode => {
+            const resultData = allResults[chapter.id]?.[mode] || null; // Получаем результат
+
+            // Форматируем данные для отображения (или ставим '-')
+            // const displayTime = resultData?.time ? resultData.time.split(':').slice(1).join(':') : '-'; // MM:SS.sss
+            const displayTime = resultData?.time ? resultData.time : '-'; // HH:MM:SS.sss
+            const displayErrors = resultData?.errors ?? '-'; // Используем ?? для null/undefined
+            const displayScore = resultData?.score ?? '-';
+            const displayRank = resultData?.rank ?? '-';
+
+            // Ячейка для Времени (Time)
+            const cellTime = document.createElement('td');
+            cellTime.className = `result-time-${mode}`; // Добавляем классы для легкого поиска при обновлении
+            cellTime.textContent = displayTime;
+            row.appendChild(cellTime);
+
+            // Ячейка для Ошибок (Missclick)
+            const cellErrors = document.createElement('td');
+            cellErrors.className = `result-errors-${mode}`;
+            cellErrors.textContent = displayErrors;
+            row.appendChild(cellErrors);
+
+            // Ячейка для Очков (Score)
+            const cellScore = document.createElement('td');
+            cellScore.className = `result-score-${mode}`;
+            cellScore.textContent = displayScore;
+            row.appendChild(cellScore);
+
+            // Ячейка для Ранга (Rank)
+            const cellRank = document.createElement('td');
+            cellRank.className = `result-rank-${mode}`;
+            cellRank.textContent = displayRank;
+            row.appendChild(cellRank);
+
+            // Ячейка для Кнопки (Start)
+            const cellButton = document.createElement('td');
+            const startButton = document.createElement('button');
+            cellButton.className = 'has-text-centered';
+            startButton.className = 'button is-ghost start-surah-button';
+            startButton.dataset.mode = mode;
+            startButton.textContent = 'Start';
+            cellButton.appendChild(startButton);
+            row.appendChild(cellButton);
+        });
 
         // Добавляем строку в тело таблицы
         surahSelectionTBody.appendChild(row);
     });
 
     // Добавляем обработчик событий на тело таблицы (event delegation)
-    surahSelectionTBody.addEventListener('click', handleSurahSelection);
+    surahSelectionTBody.addEventListener('click', handleStartSurah);
 }
 
 /**
- * Handles clicks on the Surah selection table rows.
+ * Handles clicks on the "Start" buttons within the Surah selection table.
  * @param {Event} event - The click event object.
  */
-function handleSurahSelection(event) {
-    const clickedRow = event.target.closest('tr');
+function handleStartSurah(event) {
+    // Проверяем, был ли клик именно по кнопке "Start"
+    const clickedButton = event.target.closest('.start-surah-button');
+    if (!clickedButton) {
+        return; // Клик не по кнопке, ничего не делаем
+    }
+
+    const clickedRow = clickedButton.closest('tr');
     if (!clickedRow || !clickedRow.dataset.surahId) {
-        return;
+        return; // Не удалось найти строку или ID суры
     }
 
     const selectedSurahId = parseInt(clickedRow.dataset.surahId, 10);
-    if (!isNaN(selectedSurahId)) {
-        // --- ИЗМЕНЕНО: Просто скрываем таблицу и показываем ввод ---
-        // Прячем таблицу выбора
+    const selectedMode = clickedButton.dataset.mode; // Получаем режим из data-атрибута кнопки
+
+    if (!isNaN(selectedSurahId) && (selectedMode === 'normal' || selectedMode === 'blind')) {
+        // Сохраняем выбранные параметры
+        currentSurahId = selectedSurahId; // Сохраняем ID суры для последующего сохранения результата
+        currentMode = selectedMode;     // Сохраняем выбранный режим
+
+        // Скрываем таблицу выбора
         if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden');
         // Показываем основной интерфейс ввода
         if (mainTypingSection) mainTypingSection.classList.remove('is-hidden');
-        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
-        // Загружаем выбранную суру
+        // Загружаем выбранную суру (всегда с первого аята)
+        // processSearch уже обрабатывает формат "число:число", поэтому используем его
         processSearch(`${selectedSurahId}:1`);
+
+        // Дополнительно: Применяем специфичные для режима настройки UI *сразу*
+         applyModeSettings();
+
     }
 }
 
@@ -933,13 +1036,15 @@ function toggleSurahSelectionView() {
         if (surahInputElement) surahInputElement.value = '';
         if (inputElement) {
              inputElement.value = ''; // Очищаем поле ввода текста Корана
-             inputElement.disabled = true; // Блокируем ввод текста Корана
              inputElement.classList.remove('incorrectWord'); // Убираем стиль ошибки
         }
     } else {
         // --- Переключаемся С выбора суры НА ввод ---
         surahSelectionSection.classList.add('is-hidden');
         mainTypingSection.classList.remove('is-hidden');
+
+        applyModeSettings(); // Убедимся, что кнопка Hide Ayahs отображается/скрыта правильно
+
         // Разблокируем поле ввода и фокусируемся, если сура уже загружена
         if (inputElement && quranContainer.hasChildNodes()) { // Проверяем, есть ли контент
              inputElement.disabled = false;
@@ -990,10 +1095,24 @@ function calculateAndDisplayResults() {
     if (scoreDisplay) scoreDisplay.textContent = `${score}%`; // Отображаем счет с %
     if (rankDisplay) rankDisplay.textContent = rank; // Отображаем ранг
 
+    // --- ДОБАВЛЕНО: Сохранение и обновление таблицы ---
+    const formattedTime = utils.formatTime(elapsedMilliseconds); // Получаем форматированное время для сохранения
+    const resultData = {
+        score: score,
+        time: formattedTime,
+        errors: numberOfErrors,
+        rank: rank
+    };
+
+    // Сохраняем результат, используя текущие ID суры и режим
+    saveResult(currentSurahId, currentMode, resultData);
+
+    // Обновляем отображение результата в таблице выбора сур
+    updateTableResultDisplay(currentSurahId, currentMode, resultData);
+
     console.log(`CPM: ${cpm}, ER: ${errorRate}%, aCPM: ${adjustedCPM}, Score: ${score}, ${adjustedCPM / TARGET_CPM}, Rank: ${rank}`); // Для отладки
 }
 
-// ДОБАВИТЬ НОВУЮ ФУНКЦИЮ
 /**
  * Resets the result display elements to their initial state.
  */
@@ -1001,6 +1120,113 @@ function resetResultsDisplay() {
     if (acpmDisplay) acpmDisplay.textContent = "-";
     if (scoreDisplay) scoreDisplay.textContent = "-";
     if (rankDisplay) rankDisplay.textContent = "-";
+}
+
+/**
+ * Загружает все сохраненные результаты из Local Storage.
+ * @returns {object} Объект с результатами вида { surahId: { normal: result, blind: result } } или пустой объект.
+ */
+function loadAllResults() {
+    try {
+        const storedResults = localStorage.getItem(RESULTS_STORAGE_KEY);
+        return storedResults ? JSON.parse(storedResults) : {};
+    } catch (error) {
+        console.error("Error loading results from Local Storage:", error);
+        return {}; // Возвращаем пустой объект в случае ошибки
+    }
+}
+
+/**
+ * Получает сохраненный результат для конкретной суры и режима.
+ * @param {number|string} surahId ID суры.
+ * @param {'normal'|'blind'} mode Режим ('normal' или 'blind').
+ * @returns {object | null} Объект с результатом { time, errors, rank } или null, если результат не найден.
+ */
+function getResult(surahId, mode) {
+    const allResults = loadAllResults();
+    return allResults[surahId]?.[mode] || null;
+}
+
+/**
+ * Сохраняет результат для конкретной суры и режима в Local Storage.
+ * @param {number|string} surahId ID суры.
+ * @param {'normal'|'blind'} mode Режим ('normal' или 'blind').
+ * @param {object} resultData Объект с результатом { time: string, errors: number, rank: string }.
+ */
+function saveResult(surahId, mode, resultData) {
+    if (!surahId || !mode || !resultData) {
+        console.error("Cannot save result: Invalid data provided.", { surahId, mode, resultData });
+        return;
+    }
+    const allResults = loadAllResults();
+    if (!allResults[surahId]) {
+        allResults[surahId] = {}; // Создаем запись для суры, если ее нет
+    }
+
+    if (allResults[surahId][mode]) {
+        if (allResults[surahId][mode].score >= resultData.score){
+            console.log("Результат хуже");
+            return;
+        }
+    }
+
+    try {
+        localStorage.setItem(RESULTS_STORAGE_KEY, JSON.stringify(allResults));
+        console.log(`Result saved for Surah ${surahId}, Mode ${mode}:`, resultData); // Отладка
+    } catch (error) {
+        console.error("Error saving results to Local Storage:", error);
+        showToast("Could not save your result."); // Уведомляем пользователя
+    }
+}
+
+/**
+ * Обновляет отображение результата (Time, Errors, Rank) в таблице выбора сур после завершения.
+ * @param {number|string} surahId ID суры, для которой обновляем результат.
+ * @param {'normal'|'blind'} mode Режим, для которого обновляем результат.
+ * @param {object} resultData Новый объект результата { score, time, errors, rank }.
+ */
+function updateTableResultDisplay(surahId, mode, resultData) {
+    if (!surahSelectionTBody || !resultData) return;
+    const allResults = loadAllResults();
+    if (!allResults[surahId]) {
+        allResults[surahId] = {}; // Создаем запись для суры, если ее нет
+    }
+    
+    if (allResults[surahId][mode]) {
+        if (allResults[surahId][mode].score >= resultData.score){
+            console.log("Результат хуже");
+            return;
+        }
+    }
+
+    const row = surahSelectionTBody.querySelector(`tr[data-surah-id="${surahId}"]`);
+    if (!row) return;
+
+    // Находим ячейки по добавленным классам
+    const timeCell = row.querySelector(`.result-time-${mode}`);
+    const errorsCell = row.querySelector(`.result-errors-${mode}`);
+    const scoreCell = row.querySelector(`.result-score-${mode}`);
+    const rankCell = row.querySelector(`.result-rank-${mode}`);
+
+    // Форматируем данные для отображения
+    const displayTime = resultData.time ?? '-';
+    const displayErrors = resultData.errors ?? '-';
+    const displayScore = resultData.score ?? '-';
+    const displayRank = resultData.rank ?? '-';
+
+    // Обновляем текст в ячейках
+    if (timeCell) {
+        timeCell.textContent = displayTime;
+    }
+    if (errorsCell) {
+        errorsCell.textContent = displayErrors;
+    }
+    if (scoreCell) {
+        scoreCell.textContent = displayScore;
+    }
+    if (rankCell) {
+        rankCell.textContent = displayRank;
+    }
 }
 
 // --- Event Listeners Setup ---
