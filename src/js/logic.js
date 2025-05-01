@@ -473,8 +473,10 @@ function handleNextWord(wordSpans) {
     if (mainQuranWordIndex >= wordSpans.length) {
         // Мы обработали последнее слово/символ и вышли за пределы массива
         showToast("Surah Segment Complete!"); // Показываем сообщение о завершении
-        stopTimer();
-        calculateAndDisplayResults();
+        if (timerInterval) {
+            stopTimer();
+            calculateAndDisplayResults();
+        }
         inputElement.disabled = true; // Опционально: отключаем поле ввода
         console.log("End of text reached."); // Для отладки
         return; // Прекращаем дальнейшую обработку, так как текст закончился
@@ -490,8 +492,10 @@ function handleNextWord(wordSpans) {
     if (mainQuranWordIndex >= wordSpans.length) {
         // Мы обработали последний символ (который был пропущен) и вышли за пределы
         showToast("Surah Segment Complete!"); // Показываем сообщение о завершении
-        stopTimer();
-        calculateAndDisplayResults();
+        if (timerInterval) {
+            stopTimer();
+            calculateAndDisplayResults();
+        }
         inputElement.disabled = true; // Опционально: отключаем поле ввода
         console.log("End of text reached after skipping symbols."); // Для отладки
         return; // Прекращаем дальнейшую обработку
@@ -730,9 +734,9 @@ function applyHideAyahsVisibility() {
  */
 function processSearch(query) {
     query = query.trim();
-    if (currentSearchQuery === query && query !== "") { // Don't research same if not empty
-        return;
-    }
+    // if (currentSearchQuery === query && query !== "") { // Don't research same if not empty
+    //     return;
+    // }
    
     if (query === "") {
         // Optionally reload default or do nothing. Let's reload default.
