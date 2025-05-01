@@ -308,30 +308,34 @@ export function calculateScore(aCPM, targetCPM) {
 /**
  * Determines the rank based on Score, aCPM, TargetCPM, and Error Rate.
  * @param {number} score The calculated score (0-100).
- * @param {number} aCPM The adjusted Characters Per Minute.
- * @param {number} targetCPM The target CPM.
+ * param {number} aCPM The adjusted Characters Per Minute.
+ * param {number} targetCPM The target CPM.
  * @param {number} errorRate The calculated error rate percentage.
  * @returns {string} The rank ('S', 'A', 'B', 'C', 'D').
  */
-export function determineRank(score, aCPM, targetCPM, errorRate) {
-    if (targetCPM <= 0) return 'D'; // Default rank if targetCPM is invalid
+export function determineRank(score, errorRate) {
+    // if (targetCPM <= 0) return 'D'; // Default rank if targetCPM is invalid
 
-    const acpmRatio = aCPM / targetCPM;
+    // const acpmRatio = aCPM / targetCPM; 
 
     // Check S rank first (most strict)
-    if (score >= 95 && acpmRatio >= 0.95 && errorRate === 0) {
+    // && acpmRatio >= 0.95
+    if (score >= 95 && errorRate === 0) {
         return 'S';
     }
     // Check A rank
-    if (score >= 80 && score <= 94 && acpmRatio >= 0.8 && acpmRatio < 0.95 && errorRate <= 1) {
+    // && acpmRatio >= 0.8 && acpmRatio < 0.95
+    if (score >= 80 && score <= 94 && errorRate <= 1) {
         return 'A';
     }
     // Check B rank
-    if (score >= 60 && score <= 79 && acpmRatio >= 0.6 && acpmRatio < 0.8 && errorRate <= 3) {
+    // && acpmRatio >= 0.6 && acpmRatio < 0.8 
+    if (score >= 60 && score <= 79 && errorRate <= 3) {
         return 'B';
     }
     // Check C rank
-    if (score >= 40 && score <= 59 && acpmRatio >= 0.4 && acpmRatio < 0.6 && errorRate <= 5) {
+    // && acpmRatio >= 0.4 && acpmRatio < 0.6
+    if (score >= 40 && score <= 59 && errorRate <= 5) {
         return 'C';
     }
     // Default to D rank if none of the above conditions are met

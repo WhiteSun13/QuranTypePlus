@@ -983,14 +983,14 @@ function calculateAndDisplayResults() {
     const score = utils.calculateScore(adjustedCPM, TARGET_CPM);
 
     // 3. Ранг
-    const rank = utils.determineRank(score, adjustedCPM, TARGET_CPM, errorRate);
+    const rank = utils.determineRank(score, errorRate);
 
     // 4. Отображение результатов
     if (acpmDisplay) acpmDisplay.textContent = Math.round(adjustedCPM); // Отображаем округленный aCPM
     if (scoreDisplay) scoreDisplay.textContent = `${score}%`; // Отображаем счет с %
     if (rankDisplay) rankDisplay.textContent = rank; // Отображаем ранг
 
-    console.log(`CPM: ${cpm}, ER: ${errorRate}%, aCPM: ${adjustedCPM}, Score: ${score}, Rank: ${rank}`); // Для отладки
+    console.log(`CPM: ${cpm}, ER: ${errorRate}%, aCPM: ${adjustedCPM}, Score: ${score}, ${adjustedCPM / TARGET_CPM}, Rank: ${rank}`); // Для отладки
 }
 
 // ДОБАВИТЬ НОВУЮ ФУНКЦИЮ
