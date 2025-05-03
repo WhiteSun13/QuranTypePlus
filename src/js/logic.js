@@ -2,7 +2,7 @@ import utils from './utils.js';
 
 const BASMALLA = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"
 // Added ayah marker start '﴿' to the list for easier checking
-const QURAN_SYMBOLS = ["۞", "﴾","﴿", "۩", 'ۖ', 'ۗ', 'ۘ', 'ۙ', 'ۚ', ' ۛ' , 'ۜ', 'ۛ ']
+const QURAN_SYMBOLS = ["۞", "﴾", "﴿", "۩", 'ۖ', 'ۗ', 'ۘ', 'ۙ', 'ۚ', ' ۛ', 'ۜ', 'ۛ ']
 let PROPERTIES_OF_SURAHS = null
 const TARGET_CPM = 400;
 
@@ -56,7 +56,7 @@ let rankDisplay = null;
 let quranContainer = null;
 let noTashkeelContainer = null;
 let inputElement = null;
-let errorCountDisplay = null; 
+let errorCountDisplay = null;
 let repeatCountInput = null;
 let wordRepeatCountInput = null;
 let surahSelectionSection = null;
@@ -94,7 +94,7 @@ function cacheDOMElements() {
 async function setupSurahData() {
     const baseApiUrl = 'https://api.quran.com/api/v4';
     const url = `${baseApiUrl}/chapters`;
-    
+
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -171,7 +171,7 @@ async function getSurah(surahNumber, startAyah, script) {
 
         // Validate startAyah
         if (startAyah < 1) {
-             startAyah = 1;
+            startAyah = 1;
         } else if (startAyah > totalAyahs) {
             const surahName = PROPERTIES_OF_SURAHS.chapters[surahNumber - 1].name_simple;
             showToast(`${surahName} only contains ${utils.convertToArabicNumber(totalAyahs)} ayahs. Starting from Ayah ${utils.convertToArabicNumber(1)}.`);
@@ -206,7 +206,7 @@ function applyModeSettings() {
         // Убедимся, что текст НЕ скрыт принудительно, если пользователь переключился на слепой режим
         // после активации кнопки Hide в нормальном режиме
         if (!isHideAyahsButtonActive) {
-             handleHideAyahsButton(); // "Нажимаем" кнопку, чтобы показать аяты, если были скрыты
+            handleHideAyahsButton(); // "Нажимаем" кнопку, чтобы показать аяты, если были скрыты
         }
     } else { // currentMode === 'normal'
         hideAyahsButton.style.display = ''; // Показываем кнопку в нормальном режиме (сброс на display по умолчанию)
@@ -225,7 +225,7 @@ function applyModeSettings() {
 function processAyah(text) {
     let ayah = text;
     // Handle iqlab if necessary for comparison logic (may not be needed depending on removeTashkeel)
-    ayah = ayah.replace(/\u064B\u06E2/g, '\u064E\u06E2'); 
+    ayah = ayah.replace(/\u064B\u06E2/g, '\u064E\u06E2');
     ayah = ayah.replace(/\u064C\u06E2/g, '\u064F\u06E2');
     ayah = ayah.replace(/\u064D\u06ED/g, '\u0650\u06ED');
     return ayah;
@@ -256,17 +256,17 @@ function processData(data, startAyah, script) {
 function displaySurahFromJson(data, startAyah, script) {
     const surahNameEl = document.getElementById("Surah-name");
     const basmallahContainer = document.getElementById("Basmallah");
-    
-    data = processData(data, startAyah, script); 
-    const noTashkeelAyahs = []; 
+
+    data = processData(data, startAyah, script);
+    const noTashkeelAyahs = [];
 
     const surahContent = data.verses.map((ayah, i) => {
         const currentAyahNumber = startAyah + i;
         const arabicNumber = utils.convertToArabicNumber(currentAyahNumber);
         const processedAyah = processAyah(ayah[`text_${script}`]);
-        noTashkeelAyahs.push(processedAyah); 
-        return `${processedAyah} ﴿${arabicNumber}﴾`; 
-    }).join(" "); 
+        noTashkeelAyahs.push(processedAyah);
+        return `${processedAyah} ﴿${arabicNumber}﴾`;
+    }).join(" ");
 
     const chapterInfo = PROPERTIES_OF_SURAHS.chapters[data.meta.filters.chapter_number - 1];
     surahNameEl.textContent = `سورة ${chapterInfo.name_arabic}`;
@@ -274,12 +274,12 @@ function displaySurahFromJson(data, startAyah, script) {
     if (startAyah === 1 && chapterInfo.bismillah_pre) {
         basmallahContainer.textContent = BASMALLA;
     } else {
-        basmallahContainer.textContent = ""; 
+        basmallahContainer.textContent = "";
     }
 
     document.fonts.ready.then(() => {
         fillContainerWithSpans(surahContent, quranContainer);
-        
+
         const noTashkeelString = utils.createNoTashkeelString(noTashkeelAyahs);
         utils.fillContainer(noTashkeelString, noTashkeelContainer); // Use utility for hidden div
 
@@ -292,12 +292,12 @@ function displaySurahFromJson(data, startAyah, script) {
         // console.log("Total characters for segment:", totalCharsInSegment); // Для отладки
 
         originalTopOffset = utils.getOriginalTopOffset(quranContainer);
-        secondRowTopOffset = 0; 
-        refWord = null; 
+        secondRowTopOffset = 0;
+        refWord = null;
 
         const wordSpans = quranContainer.querySelectorAll('span');
         if (wordSpans.length > 0) {
-             refWord = wordSpans[0]; // Initialize refWord to the first word
+            refWord = wordSpans[0]; // Initialize refWord to the first word
             for (let i = 1; i < wordSpans.length; i++) {
                 const span = wordSpans[i];
                 if (span.offsetTop > originalTopOffset) {
@@ -307,21 +307,21 @@ function displaySurahFromJson(data, startAyah, script) {
                 }
             }
         }
-         currentAyahStartIndex_Main = 0; 
-         currentAyahStartIndex_NoTashkeel = 0;
+        currentAyahStartIndex_Main = 0;
+        currentAyahStartIndex_NoTashkeel = 0;
 
-         applyModeSettings();
+        applyModeSettings();
 
         // Apply initial hide state if active (только если режим нормальный)
         if (isHideAyahsButtonActive) {
-             applyHideAyahsVisibility();
+            applyHideAyahsVisibility();
         }
 
         // ДОБАВИТЬ: Фокусировка на поле ввода после готовности
-         if (inputElement && !mainTypingSection.classList.contains('is-hidden')) {
-             inputElement.disabled = false;
-             inputElement.focus();
-         }
+        if (inputElement && !mainTypingSection.classList.contains('is-hidden')) {
+            inputElement.disabled = false;
+            inputElement.focus();
+        }
     });
 }
 
@@ -331,13 +331,13 @@ function displaySurahFromJson(data, startAyah, script) {
  * @param {HTMLElement} container - The container element to fill.
  */
 function fillContainerWithSpans(content, container) {
-    utils.clearContainer(container); 
+    utils.clearContainer(container);
     originalTopOffset = utils.getOriginalTopOffset(container);
     const words = content.split(" ");
     words.forEach((word) => {
-        if (word) { 
+        if (word) {
             const span = document.createElement('span');
-            span.textContent = `${word} `; 
+            span.textContent = `${word} `;
             container.appendChild(span);
         }
     });
@@ -355,17 +355,17 @@ function handleInput(event) {
     if (startTime === null) {
         startTimer();
     }
-    
+
     const wordSpans = quranContainer.querySelectorAll('span');
-    
+
     // Basic boundary checks
     if (noTashkeelWordIndex >= noTashkeelContainer.childNodes.length || mainQuranWordIndex >= wordSpans.length) {
         // console.warn("Index out of bounds, possibly end of Surah/Ayah segment.");
-        return; 
+        return;
     }
 
     const currentNoTashkeelWord = noTashkeelContainer.childNodes[noTashkeelWordIndex].textContent;
-    const inputText = event.target.value; 
+    const inputText = event.target.value;
     const targetWordSpan = wordSpans[mainQuranWordIndex];
     if (!targetWordSpan) return;
 
@@ -373,11 +373,11 @@ function handleInput(event) {
     if (currentNoTashkeelWord.startsWith(inputText)) {
         // Input is currently correct or partially correct
         targetWordSpan.classList.remove('incorrectWord'); // Remove error style if it was applied
-        
+
         // Check if the full word has been typed correctly
         if (inputText === currentNoTashkeelWord) {
             handleCorrectWord(wordSpans);
-        } 
+        }
     } else {
         // Incorrect input character(s) entered
         if (!targetWordSpan.classList.contains('incorrectWord')) { // Count error only once per incorrect attempt
@@ -405,9 +405,9 @@ function handleCorrectWord(wordSpans) {
         // The input is already cleared, ready for the next typing of the same word.
         correctWordSpan.classList.remove('correctWord'); // Temporarily remove style for re-typing
         // Re-apply hidden style if hide button is active
-         if (isHideAyahsButtonActive) {
-             correctWordSpan.style.visibility = 'hidden';
-         }
+        if (isHideAyahsButtonActive) {
+            correctWordSpan.style.visibility = 'hidden';
+        }
 
     } else {
         // ** Word Repetition Complete, Move On **
@@ -422,27 +422,27 @@ function handleCorrectWord(wordSpans) {
                 // ** Repeat Current Ayah **
                 currentAyahRepetition++;
                 showToast(`Repeating Ayah: ${utils.convertToArabicNumber(currentAyahRepetition)} / ${utils.convertToArabicNumber(ayahRepeatCount)}`);
-                
+
                 // Reset UI for the completed ayah (before resetting indices)
-                resetCurrentAyahUI(mainQuranWordIndex); 
+                resetCurrentAyahUI(mainQuranWordIndex);
 
                 // Reset indices to the start of the *current* ayah
                 mainQuranWordIndex = currentAyahStartIndex_Main;
                 noTashkeelWordIndex = currentAyahStartIndex_NoTashkeel;
-                
+
                 // Recalculate scroll offsets based on the new first word of the ayah
                 resetScrollOffsets(wordSpans, mainQuranWordIndex);
 
-                 // Ensure the first word of the repeated ayah is ready (remove correct style, set visibility)
-                 const firstWordSpan = wordSpans[mainQuranWordIndex];
-                 if (firstWordSpan) {
+                // Ensure the first word of the repeated ayah is ready (remove correct style, set visibility)
+                const firstWordSpan = wordSpans[mainQuranWordIndex];
+                if (firstWordSpan) {
                     firstWordSpan.classList.remove('correctWord', 'incorrectWord');
-                     if (isHideAyahsButtonActive) {
+                    if (isHideAyahsButtonActive) {
                         firstWordSpan.style.visibility = 'hidden';
-                     } else {
-                         firstWordSpan.style.visibility = 'visible';
-                     }
-                 }
+                    } else {
+                        firstWordSpan.style.visibility = 'visible';
+                    }
+                }
 
 
             } else {
@@ -520,7 +520,7 @@ function isNextWordAyahMarker(wordSpans, currentIndex) {
     if (nextIndex < wordSpans.length) {
         // Check the content of the *next* span
         const nextWordText = wordSpans[nextIndex].textContent;
-        return nextWordText.includes('﴿'); 
+        return nextWordText.includes('﴿');
     }
     return false;
 }
@@ -535,32 +535,32 @@ function resetCurrentAyahUI(lastCorrectWordIndex) {
 
     for (let i = ayahStartIndex; i <= lastCorrectWordIndex; i++) {
         const span = wordSpans[i];
-        if (span) { 
+        if (span) {
             span.classList.remove('correctWord', 'incorrectWord');
-            
+
             // Reset visibility based on hide button state, but only if not hidden by scrolling
             if (span.style.display !== 'none') {
-                 if (isHideAyahsButtonActive) {
-                     span.style.visibility = 'hidden';
-                 } else {
-                     span.style.visibility = 'visible';
-                 }
+                if (isHideAyahsButtonActive) {
+                    span.style.visibility = 'hidden';
+                } else {
+                    span.style.visibility = 'visible';
+                }
             }
         }
     }
     // Also reset the ayah marker span that follows
-     const markerIndex = lastCorrectWordIndex + 1;
-     if (markerIndex < wordSpans.length && wordSpans[markerIndex].textContent.includes('﴿')) {
-         const markerSpan = wordSpans[markerIndex];
-         markerSpan.classList.remove('correctWord', 'incorrectWord');
-         if (markerSpan.style.display !== 'none') {
+    const markerIndex = lastCorrectWordIndex + 1;
+    if (markerIndex < wordSpans.length && wordSpans[markerIndex].textContent.includes('﴿')) {
+        const markerSpan = wordSpans[markerIndex];
+        markerSpan.classList.remove('correctWord', 'incorrectWord');
+        if (markerSpan.style.display !== 'none') {
             if (isHideAyahsButtonActive) {
                 markerSpan.style.visibility = 'hidden';
             } else {
                 markerSpan.style.visibility = 'visible';
             }
-         }
-     }
+        }
+    }
 }
 
 
@@ -570,28 +570,28 @@ function resetCurrentAyahUI(lastCorrectWordIndex) {
  * @param {number} currentWordIndex - Index of the word the user will type next.
  */
 function resetScrollOffsets(wordSpans, currentWordIndex) {
-     originalTopOffset = utils.getOriginalTopOffset(quranContainer);
-     secondRowTopOffset = 0; 
-     refWord = null; 
+    originalTopOffset = utils.getOriginalTopOffset(quranContainer);
+    secondRowTopOffset = 0;
+    refWord = null;
 
-     if (currentWordIndex < wordSpans.length) {
+    if (currentWordIndex < wordSpans.length) {
         const startingSpan = wordSpans[currentWordIndex];
         refWord = startingSpan; // Start reference is the first word of the repeated ayah
 
         if (startingSpan.offsetTop > originalTopOffset) {
-             originalTopOffset = startingSpan.offsetTop; 
+            originalTopOffset = startingSpan.offsetTop;
         }
 
         for (let i = currentWordIndex + 1; i < wordSpans.length; i++) {
             const span = wordSpans[i];
-            if (span.offsetTop > originalTopOffset) { 
+            if (span.offsetTop > originalTopOffset) {
                 secondRowTopOffset = span.offsetTop;
-                refWord = span; 
+                refWord = span;
                 break;
             }
         }
         // If no second line is found within the ayah, refWord remains the starting span
-     }
+    }
 }
 
 /**
@@ -603,8 +603,7 @@ function handleSymbolSkip(wordSpans) {
 
     // Пока текущий индекс в пределах массива И текст в текущем span является символом
     while (mainQuranWordIndex < wordSpans.length &&
-           QURAN_SYMBOLS.some(char => wordSpans[mainQuranWordIndex].textContent.includes(char)))
-    {
+        QURAN_SYMBOLS.some(char => wordSpans[mainQuranWordIndex].textContent.includes(char))) {
         const symbolSpan = wordSpans[mainQuranWordIndex];
         utils.applyCorrectWordStyle(symbolSpan); // Отмечаем символ как пройденный
 
@@ -690,8 +689,8 @@ function handleOffsetTop(wordSpans, wordToCheck) {
  * Toggles the visibility of untyped words and updates the button text.
  */
 function handleHideAyahsButton() {
-    isHideAyahsButtonActive = !isHideAyahsButtonActive; 
-    const button = document.getElementById('hideAyahsButton'); 
+    isHideAyahsButtonActive = !isHideAyahsButtonActive;
+    const button = document.getElementById('hideAyahsButton');
     button.textContent = isHideAyahsButtonActive ? "Show Ayahs" : "Hide Ayahs";
     applyHideAyahsVisibility(); // Apply the change to spans
 }
@@ -704,25 +703,25 @@ function applyHideAyahsVisibility() {
     wordSpans.forEach(span => {
         // Only affect spans not hidden by scrolling ('display: none')
         if (span.style.display !== 'none') {
-             // Hide if button active AND span is not already correctly typed
-             if (isHideAyahsButtonActive && !span.classList.contains('correctWord')) {
-                 span.style.visibility = 'hidden';
-             } else {
-                 // Show otherwise (unless it's an incorrect word during word repetition maybe?)
-                 // Ensure symbols like ayah markers remain visible
-                 if (!QURAN_SYMBOLS.some(char => span.textContent.includes(char)) && span.classList.contains('incorrectWord')) {
-                     // Keep incorrect words hidden if hiding is active? Decide on behavior.
-                     // For simplicity, let's make them visible when Show is clicked.
-                     span.style.visibility = 'visible';
-                 } else if (!span.textContent.includes(' ') || !QURAN_SYMBOLS.some(char => span.textContent.includes(char))) {
-                     // Make normal words visible if not hiding
-                      span.style.visibility = 'visible';
-                 }
-                 // Ensure symbols stay visible generally
-                 if (QURAN_SYMBOLS.some(char => span.textContent.includes(char))) {
-                     span.style.visibility = 'visible';
-                 }
-             }
+            // Hide if button active AND span is not already correctly typed
+            if (isHideAyahsButtonActive && !span.classList.contains('correctWord')) {
+                span.style.visibility = 'hidden';
+            } else {
+                // Show otherwise (unless it's an incorrect word during word repetition maybe?)
+                // Ensure symbols like ayah markers remain visible
+                if (!QURAN_SYMBOLS.some(char => span.textContent.includes(char)) && span.classList.contains('incorrectWord')) {
+                    // Keep incorrect words hidden if hiding is active? Decide on behavior.
+                    // For simplicity, let's make them visible when Show is clicked.
+                    span.style.visibility = 'visible';
+                } else if (!span.textContent.includes(' ') || !QURAN_SYMBOLS.some(char => span.textContent.includes(char))) {
+                    // Make normal words visible if not hiding
+                    span.style.visibility = 'visible';
+                }
+                // Ensure symbols stay visible generally
+                if (QURAN_SYMBOLS.some(char => span.textContent.includes(char))) {
+                    span.style.visibility = 'visible';
+                }
+            }
         }
     });
 }
@@ -737,19 +736,19 @@ function processSearch(query) {
     // if (currentSearchQuery === query && query !== "") { // Don't research same if not empty
     //     return;
     // }
-   
+
     if (query === "") {
         // Optionally reload default or do nothing. Let's reload default.
         if (currentSearchQuery !== "1:1") { // Avoid reloading if already at default
-             currentSearchQuery = "1:1"; 
-             getSurah(1, 1, 'uthmani');
+            currentSearchQuery = "1:1";
+            getSurah(1, 1, 'uthmani');
         }
         return;
     }
 
     const processedQuery = query.split(/[\\s,:-]+/).filter(Boolean);
     let surahNum = NaN;
-    let ayahNum = 1; 
+    let ayahNum = 1;
 
     if (processedQuery.length === 0 || processedQuery.length > 2) {
         showToast(`Invalid format. Use Surah:Ayah, Surah Ayah, or just Surah.`);
@@ -762,18 +761,18 @@ function processSearch(query) {
 
     surahNum = parseInt(processedQuery[0], 10);
     if (surahNum < 1 || surahNum > 114) {
-         showToast(`Surah number must be between 1 and 114.`);
-         return;
+        showToast(`Surah number must be between 1 and 114.`);
+        return;
     }
 
     if (processedQuery.length === 2) {
         ayahNum = parseInt(processedQuery[1], 10);
         if (ayahNum < 1) {
             showToast(`Ayah number must be 1 or greater. Starting from Ayah 1.`);
-            ayahNum = 1; 
+            ayahNum = 1;
         }
     }
-    
+
     currentSearchQuery = query; // Store the valid query
     getSurah(surahNum, ayahNum, 'uthmani');
 }
@@ -789,9 +788,9 @@ function showToast(message) {
         gravity: "bottom",
         position: 'center',
         close: true,
-        style: { 
-             background: "linear-gradient(to right, #1473e6, #0D66D0)", // Match button color
-             color: "#ffffff" // White text
+        style: {
+            background: "linear-gradient(to right, #1473e6, #0D66D0)", // Match button color
+            color: "#ffffff" // White text
         }
     }).showToast();
 }
@@ -923,7 +922,7 @@ function populateSurahSelectionTable() {
         row.appendChild(cellNameSimple);
         row.appendChild(cellRevelationPlace);
         row.appendChild(cellVersesCount);
-        
+
         // --- Ячейки для режимов (Normal: 5-8, Blind: 9-12) ---
         ['normal', 'blind'].forEach(mode => {
             const resultData = allResults[chapter.id]?.[mode] || null; // Получаем результат
@@ -1012,7 +1011,7 @@ function handleStartSurah(event) {
         processSearch(`${selectedSurahId}:1`);
 
         // Дополнительно: Применяем специфичные для режима настройки UI *сразу*
-         applyModeSettings();
+        applyModeSettings();
 
     }
 }
@@ -1036,8 +1035,8 @@ function toggleSurahSelectionView() {
         const surahInputElement = document.getElementById("Surah-selection-input");
         if (surahInputElement) surahInputElement.value = '';
         if (inputElement) {
-             inputElement.value = ''; // Очищаем поле ввода текста Корана
-             inputElement.classList.remove('incorrectWord'); // Убираем стиль ошибки
+            inputElement.value = ''; // Очищаем поле ввода текста Корана
+            inputElement.classList.remove('incorrectWord'); // Убираем стиль ошибки
         }
     } else {
         // --- Переключаемся С выбора суры НА ввод ---
@@ -1048,13 +1047,13 @@ function toggleSurahSelectionView() {
 
         // Разблокируем поле ввода и фокусируемся, если сура уже загружена
         if (inputElement && quranContainer.hasChildNodes()) { // Проверяем, есть ли контент
-             inputElement.disabled = false;
-             inputElement.focus();
+            inputElement.disabled = false;
+            inputElement.focus();
         } else if (!quranContainer.hasChildNodes()) {
-             // Если сура еще не загружена (например, при первом запуске была ошибка),
-             // можно загрузить суру по умолчанию или оставить поле заблокированным
-             // Давайте загрузим по умолчанию для надежности
-             processSearch("1:1");
+            // Если сура еще не загружена (например, при первом запуске была ошибка),
+            // можно загрузить суру по умолчанию или оставить поле заблокированным
+            // Давайте загрузим по умолчанию для надежности
+            processSearch("1:1");
         }
     }
 }
@@ -1107,10 +1106,6 @@ function calculateAndDisplayResults() {
 
     // Сохраняем результат, используя текущие ID суры и режим
     saveResult(currentSurahId, currentMode, resultData);
-
-    // Обновляем отображение результата в таблице выбора сур
-    updateTableResultDisplay(currentSurahId, currentMode, resultData);
-
     console.log(`CPM: ${cpm}, ER: ${errorRate}%, aCPM: ${adjustedCPM}, Score: ${score}, ${adjustedCPM / TARGET_CPM}, Rank: ${rank}`); // Для отладки
 }
 
@@ -1165,7 +1160,7 @@ function saveResult(surahId, mode, resultData) {
     }
 
     if (allResults[surahId][mode]) {
-        if (allResults[surahId][mode].score >= resultData.score){
+        if (allResults[surahId][mode].score >= resultData.score) {
             console.log("The result is worse");
             return;
         }
@@ -1180,6 +1175,9 @@ function saveResult(surahId, mode, resultData) {
     } catch (error) {
         console.error("Error saving results to Local Storage:", error);
         showToast("Could not save your result."); // Уведомляем пользователя
+    } finally {
+        // Обновляем отображение результата в таблице выбора сур
+        updateTableResultDisplay(currentSurahId, currentMode, resultData);
     }
 }
 
@@ -1191,17 +1189,6 @@ function saveResult(surahId, mode, resultData) {
  */
 function updateTableResultDisplay(surahId, mode, resultData) {
     if (!surahSelectionTBody || !resultData) return;
-    const allResults = loadAllResults();
-    if (!allResults[surahId]) {
-        allResults[surahId] = {}; // Создаем запись для суры, если ее нет
-    }
-    
-    if (allResults[surahId][mode]) {
-        if (allResults[surahId][mode].score > resultData.score){
-            console.log("Результат хуже");
-            return;
-        }
-    }
 
     const row = surahSelectionTBody.querySelector(`tr[data-surah-id="${surahId}"]`);
     if (!row) return;
@@ -1251,13 +1238,13 @@ function addListeners() {
     inputElement.addEventListener("input", handleInput);
     inputElement.addEventListener("focus", () => { // Clear potential error style on focus
         const wordSpans = quranContainer.querySelectorAll('span');
-         if (mainQuranWordIndex < wordSpans.length) {
+        if (mainQuranWordIndex < wordSpans.length) {
             wordSpans[mainQuranWordIndex].classList.remove('incorrectWord');
-         }
+        }
     });
-    
+
     // Ayah Repetition Input
-    repeatCountInput.addEventListener('change', (event) => { 
+    repeatCountInput.addEventListener('change', (event) => {
         const newCount = parseInt(event.target.value, 10);
         if (!isNaN(newCount) && newCount >= 1) {
             ayahRepeatCount = newCount;
@@ -1267,24 +1254,24 @@ function addListeners() {
         }
     });
     repeatCountInput.addEventListener('input', (event) => { // Prevent non-numeric faster
-         event.target.value = event.target.value.replace(/[^0-9]/g, '');
-     });
+        event.target.value = event.target.value.replace(/[^0-9]/g, '');
+    });
 
-     // Word Repetition Input (New)
-    wordRepeatCountInput.addEventListener('change', (event) => { 
+    // Word Repetition Input (New)
+    wordRepeatCountInput.addEventListener('change', (event) => {
         const newCount = parseInt(event.target.value, 10);
         if (!isNaN(newCount) && newCount >= 1) {
             wordRepeatCount = newCount;
-             // Reset current word repetition if count changes mid-word? Optional.
-             // currentWordRepetition = 1; // Let's not reset for now.
+            // Reset current word repetition if count changes mid-word? Optional.
+            // currentWordRepetition = 1; // Let's not reset for now.
         } else {
             event.target.value = wordRepeatCount; // Revert if invalid
             showToast("Word repetition count must be 1 or greater.");
         }
     });
     wordRepeatCountInput.addEventListener('input', (event) => { // Prevent non-numeric faster
-         event.target.value = event.target.value.replace(/[^0-9]/g, '');
-     });
+        event.target.value = event.target.value.replace(/[^0-9]/g, '');
+    });
 
 
     // Surah Selection Input and Button
@@ -1297,7 +1284,7 @@ function addListeners() {
     });
     surahInputElement.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
-            event.preventDefault(); 
+            event.preventDefault();
             currentMode = 'UserSearch';
             processSearch(surahInputElement.value);
         }
@@ -1334,11 +1321,11 @@ function runApp(initialSurah = 1, initialAyah = 1, initialScript = 'uthmani') {
 
             // --- Возвращаем загрузку суры по умолчанию ---
             currentSearchQuery = `${initialSurah}:${initialAyah}`;
-            if(inputElement) inputElement.disabled = false;
+            if (inputElement) inputElement.disabled = false;
             // Убедимся, что секция ввода видима, а выбора - скрыта ПЕРЕД загрузкой суры
-             if (mainTypingSection) mainTypingSection.classList.remove('is-hidden');
-             if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden');
-             // Загружаем суру
+            if (mainTypingSection) mainTypingSection.classList.remove('is-hidden');
+            if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden');
+            // Загружаем суру
             getSurah(initialSurah, initialAyah, initialScript);
             // --- Конец возврата ---
 
@@ -1347,15 +1334,15 @@ function runApp(initialSurah = 1, initialAyah = 1, initialScript = 'uthmani') {
             console.error('Error during application initialization:', error);
             showToast("Failed to initialize application data. Please refresh.");
             resetResultsDisplay();
-             // Показываем ошибку, например, в основной секции
-             if (mainTypingSection) mainTypingSection.classList.remove('is-hidden'); // Показать секцию
-             if (quranContainer) quranContainer.innerHTML = '<p class="has-text-danger has-text-centered">Error loading data. Try refreshing the page.</p>'; // Сообщение об ошибке
-             if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden'); // Скрыть секцию выбора
-            if(errorCountDisplay) errorCountDisplay.textContent = "Error";
-            if(inputElement) inputElement.disabled = true;
-            if(acpmDisplay) acpmDisplay.textContent = "Error"; // Доп. индикация
-            if(scoreDisplay) scoreDisplay.textContent = "Error";
-            if(rankDisplay) rankDisplay.textContent = "Error";
+            // Показываем ошибку, например, в основной секции
+            if (mainTypingSection) mainTypingSection.classList.remove('is-hidden'); // Показать секцию
+            if (quranContainer) quranContainer.innerHTML = '<p class="has-text-danger has-text-centered">Error loading data. Try refreshing the page.</p>'; // Сообщение об ошибке
+            if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden'); // Скрыть секцию выбора
+            if (errorCountDisplay) errorCountDisplay.textContent = "Error";
+            if (inputElement) inputElement.disabled = true;
+            if (acpmDisplay) acpmDisplay.textContent = "Error"; // Доп. индикация
+            if (scoreDisplay) scoreDisplay.textContent = "Error";
+            if (rankDisplay) rankDisplay.textContent = "Error";
         });
 }
 
