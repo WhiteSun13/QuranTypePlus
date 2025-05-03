@@ -1197,7 +1197,7 @@ function updateTableResultDisplay(surahId, mode, resultData) {
     }
     
     if (allResults[surahId][mode]) {
-        if (allResults[surahId][mode].score >= resultData.score){
+        if (allResults[surahId][mode].score > resultData.score){
             console.log("Результат хуже");
             return;
         }
