@@ -1166,10 +1166,13 @@ function saveResult(surahId, mode, resultData) {
 
     if (allResults[surahId][mode]) {
         if (allResults[surahId][mode].score >= resultData.score){
-            console.log("Результат хуже");
+            console.log("The result is worse");
             return;
         }
     }
+
+    allResults[surahId][mode] = resultData; // Save result
+    showToast("New Record!");
 
     try {
         localStorage.setItem(RESULTS_STORAGE_KEY, JSON.stringify(allResults));
