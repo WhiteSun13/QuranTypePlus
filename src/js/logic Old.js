@@ -6,24 +6,6 @@ const QURAN_SYMBOLS = ["۞", "﴾", "﴿", "۩", 'ۖ', 'ۗ', 'ۘ', 'ۙ', 'ۚ', '
 let PROPERTIES_OF_SURAHS = null
 const TARGET_CPM = 400;
 
-// --- Constants for Segment Types ---
-const SEGMENT_TYPE = {
-    SURAH: 'surah',
-    JUZ: 'juz',
-    HIZB: 'hizb',
-    RUB: 'rub',
-    PAGE: 'page',
-    SEARCH: 'search'
-};
-
-// --- Constants for Segment Counts ---
-const COUNT = {
-    JUZ: 30,
-    HIZB: 60,
-    RUB: 240,
-    PAGE: 604
-};
-
 // --- UI State ---
 // Определяем предпочтения пользователя ИЛИ сохраненное значение
 const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -61,12 +43,11 @@ let originalTopOffset = 0 // Top offset of the first line
 let secondRowTopOffset = 0 // Top offset of the second line (once it appears)
 let refWord = null // Reference word span used for hiding previous lines
 
-// --- Ranking & Selection State ---
-let currentMode = 'normal'; // 'normal' or 'blind'
-let currentSelectionType = SEGMENT_TYPE.SURAH; // 'surah', 'juz', 'hizb', 'rub', 'page', 'search'
-let currentSelectionId = null; // ID текущего сегмента (номер суры, джуза и т.д.)
-const RESULTS_STORAGE_KEY = 'quranTypePlusResults';
-let totalCharsInSegment = 0;
+// --- Ranking ---
+let currentMode = 'normal'; // 'normal' or 'blind' - Текущий выбранный режим
+let currentSurahId = null; // ID текущей запущенной суры для сохранения результатов
+const RESULTS_STORAGE_KEY = 'quranTypePlusResults'; // Ключ для Local Storage
+let totalCharsInSegment = 0; // Общее количество символов в текущем сегменте для расчета CPM
 let acpmDisplay = null;
 let scoreDisplay = null;
 let rankDisplay = null;
@@ -82,15 +63,7 @@ let surahSelectionSection = null;
 let mainTypingSection = null;
 let surahSelectionTBody = null;
 let changeSurahButton = null;
-let hideAyahsButton = null;
-// ДОБАВЛЕНО: Ссылки на tbody для новых таблиц
-let juzSelectionTBody = null;
-let hizbSelectionTBody = null;
-let rubSelectionTBody = null;
-let pageSelectionTBody = null;
-// ДОБАВЛЕНО: Ссылки на контейнеры вкладок и сами вкладки
-let tabLinks = null;
-let tabContentContainers = null;
+let hideAyahsButton = null; // Добавим ссылку на кнопку Hide Ayahs
 
 // --- Initialization Functions ---
 
@@ -107,22 +80,12 @@ function cacheDOMElements() {
     timerDisplayElement = document.getElementById("timerDisplay");
     surahSelectionSection = document.getElementById('surah-selection-section');
     mainTypingSection = document.getElementById('main-typing-section');
+    surahSelectionTBody = document.getElementById('surah-selection-tbody');
     changeSurahButton = document.getElementById('change-surah-button');
     hideAyahsButton = document.getElementById('hideAyahsButton');
     acpmDisplay = document.getElementById("acpmDisplay");
     scoreDisplay = document.getElementById("scoreDisplay");
     rankDisplay = document.getElementById("rankDisplay");
-
-    // ДОБАВЛЕНО: Кэширование tbody для всех таблиц
-    surahSelectionTBody = document.getElementById('surah-selection-tbody');
-    juzSelectionTBody = document.getElementById('juz-selection-tbody');
-    hizbSelectionTBody = document.getElementById('hizb-selection-tbody');
-    rubSelectionTBody = document.getElementById('rub-selection-tbody');
-    pageSelectionTBody = document.getElementById('page-selection-tbody');
-
-    // ДОБАВЛЕНО: Кэширование элементов вкладок
-    tabLinks = document.querySelectorAll('.tabs li[data-tab]');
-    tabContentContainers = document.querySelectorAll('.tab-content');
 }
 
 /**
@@ -144,16 +107,15 @@ async function setupSurahData() {
     }
 }
 
-// ИЗМЕНЕНО: Создаем общую функцию для загрузки сегментов
 /**
- * Fetches and displays a specific Quran segment (Surah, Juz, Hizb, etc.).
+ * Fetches and displays a specific Surah or part of a Surah.
  * Resets state variables for the new segment.
- * @param {string} type - The type of segment (use SEGMENT_TYPE constants).
- * @param {number} id - The number of the segment (Surah number, Juz number, etc.).
+ * @param {number} surahNumber - The number of the Surah (1-114).
+ * @param {number} startAyah - The ayah number to start from.
  * @param {string} script - The Quran script to use (e.g., 'uthmani').
  */
-async function getQuranSegment(type, id, script) {
-    // --- Reset State for New Segment ---
+async function getSurah(surahNumber, startAyah, script) {
+    // --- Reset State for New Surah/Ayah ---
     resetTimer();
     currentLetterIndex = 0;
     mainQuranWordIndex = 0;
@@ -168,7 +130,9 @@ async function getQuranSegment(type, id, script) {
     totalErrors = 0; // Reset error count
     updateErrorDisplay(); // Update the display to show 0 errors
 
+    // ДОБАВИТЬ: Сброс количества символов
     totalCharsInSegment = 0;
+    // ДОБАВИТЬ: Сброс отображения результатов
     resetResultsDisplay();
 
     originalTopOffset = 0;
@@ -177,56 +141,22 @@ async function getQuranSegment(type, id, script) {
 
     inputElement.value = ""; // Clear input field
     inputElement.classList.remove('incorrectWord'); // Ensure input isn't styled incorrectly initially
-    inputElement.disabled = false; // Ensure input is enabled
+    inputElement.disabled = false; // *** ДОБАВЛЕНО: Убедимся, что поле ввода активно при загрузке нового текста ***
 
     // Reset hide words state visually if needed (e.g., button text)
     // if (isHideAyahsButtonActive) { handleHideAyahsButton(); } // Toggle off if desired
 
-    // Сохраняем тип и ID текущего выбора
-    currentSelectionType = type;
-    currentSelectionId = id;
+    // ДОБАВИТЬ: Устанавливаем ID суры, если она загружается через поиск
+    // Мы не меняем currentMode здесь, он устанавливается только при клике на кнопку Start в таблице
+    // Если пользователь ищет вручную, можно считать это 'normal' режимом по умолчанию?
+    // Или нужно как-то дать выбрать режим и для поиска? Пока оставим как есть.
+    // Если сура загружена через поиск, а не кнопку Start, currentSurahId может быть не установлен.
+    // Установим его здесь для корректного сохранения, если пользователь завершит печатать.
+    currentSurahId = surahNumber;
 
-    // Constructing the API URL based on type
+    // Constructing the API URL
     const baseApiUrl = 'https://api.quran.com/api/v4';
-    let url = `${baseApiUrl}/quran/verses/${script}?`;
-    let segmentName = ''; // Для отображения информации о сегменте
-
-    switch (type) {
-        case SEGMENT_TYPE.SURAH:
-            // Добавляем обработку случая, когда ID содержит ':' (для поиска)
-            let surahNum = id, startAyah = 1;
-            if (typeof id === 'string' && id.includes(':')) {
-                const parts = id.split(':');
-                surahNum = parseInt(parts[0], 10);
-                startAyah = parseInt(parts[1], 10) || 1;
-                // Обновляем currentSelectionId, если он был строкой
-                currentSelectionId = surahNum; // Для сохранения результатов используем только номер суры
-            } else {
-                 surahNum = parseInt(id, 10);
-            }
-            url += `chapter_number=${surahNum}`;
-            // Получаем имя суры позже, после загрузки данных
-            break;
-        case SEGMENT_TYPE.JUZ:
-            url += `juz_number=${id}`;
-            segmentName = `Juz ${utils.convertToArabicNumber(id)}`;
-            break;
-        case SEGMENT_TYPE.HIZB:
-            url += `hizb_number=${id}`;
-            segmentName = `Hizb ${utils.convertToArabicNumber(id)}`;
-            break;
-        case SEGMENT_TYPE.RUB:
-            url += `rub_el_hizb_number=${id}`;
-            segmentName = `Rub' ${utils.convertToArabicNumber(id)}`;
-            break;
-        case SEGMENT_TYPE.PAGE:
-            url += `page_number=${id}`;
-            segmentName = `Page ${utils.convertToArabicNumber(id)}`;
-            break;
-        default:
-            showToast("Invalid selection type.");
-            return;
-    }
+    const url = `${baseApiUrl}/quran/verses/${script}?chapter_number=${surahNumber}`;
 
     // Show loading indicator (optional)
     // showLoadingIndicator(true);
@@ -234,65 +164,26 @@ async function getQuranSegment(type, id, script) {
     try {
         const response = await fetch(url);
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({})); // Попытка получить тело ошибки
-            throw new Error(`Failed to fetch verses for ${type} ${id}. Status: ${response.status}. ${errorData.message || ''}`);
+            throw new Error('Failed to fetch verses');
         }
         const data = await response.json();
+        const totalAyahs = data.verses.length;
 
-        // --- Обработка старта не с первого аята для Сур ---
-        let effectiveStartAyah = 1;
-        let displayData = data;
-        let chapterInfo = null;
-
-        if (type === SEGMENT_TYPE.SURAH || currentSelectionType === SEGMENT_TYPE.SEARCH) {
-            let surahNumToUse = currentSelectionId; // Используем сохраненный номер суры
-            chapterInfo = PROPERTIES_OF_SURAHS?.chapters?.[surahNumToUse - 1];
-
-             // Обрабатываем случай, когда ID содержал номер аята
-            if (typeof id === 'string' && id.includes(':')) {
-                 const parts = id.split(':');
-                 effectiveStartAyah = parseInt(parts[1], 10) || 1;
-             } else {
-                 effectiveStartAyah = 1; // По умолчанию для суры, если не указан аят
-             }
-
-            const totalAyahs = data.verses.length;
-             // Validate startAyah only for Surah type fetched by chapter_number
-             if (effectiveStartAyah < 1) {
-                 effectiveStartAyah = 1;
-             } else if (effectiveStartAyah > totalAyahs) {
-                 const surahName = chapterInfo?.name_simple || `Surah ${surahNumToUse}`;
-                 showToast(`${surahName} only contains ${utils.convertToArabicNumber(totalAyahs)} ayahs. Starting from Ayah ${utils.convertToArabicNumber(1)}.`);
-                 effectiveStartAyah = 1;
-             }
-            // Обрезаем данные для суры, если нужно начать не с 1 аята
-             displayData = processData(data, effectiveStartAyah, script);
-        } else {
-            // Для Juz, Hizb и т.д. API уже возвращает нужный сегмент, startAyah не нужен
-            effectiveStartAyah = 1; // Считаем, что для этих сегментов всегда начинаем с "первого" аята сегмента
-            // Определяем информацию о главе из первого аята полученных данных (для басмалы)
-            const firstVerseKey = data.verses[0]?.verse_key;
-            if (firstVerseKey) {
-                const firstVerseParts = firstVerseKey.split(':');
-                const chapterNumberOfFirstVerse = parseInt(firstVerseParts[0], 10);
-                const ayahNumberOfFirstVerse = parseInt(firstVerseParts[1], 10);
-                 chapterInfo = PROPERTIES_OF_SURAHS?.chapters?.[chapterNumberOfFirstVerse - 1];
-                 // Показываем басмалу только если сегмент начинается с 1-го аята суры (кроме 9-й)
-                 if (ayahNumberOfFirstVerse !== 1 || chapterNumberOfFirstVerse === 9 || chapterNumberOfFirstVerse === 1) {
-                     chapterInfo = { ...chapterInfo, bismillah_pre: false }; // Переопределяем для случая не первого аята
-                 }
-            }
+        // Validate startAyah
+        if (startAyah < 1) {
+            startAyah = 1;
+        } else if (startAyah > totalAyahs) {
+            const surahName = PROPERTIES_OF_SURAHS.chapters[surahNumber - 1].name_simple;
+            showToast(`${surahName} only contains ${utils.convertToArabicNumber(totalAyahs)} ayahs. Starting from Ayah ${utils.convertToArabicNumber(1)}.`);
+            startAyah = 1;
         }
 
-
-        applyModeSettings(); // Применяем настройки режима (например, скрыть кнопку)
-        // Передаем displayData, effectiveStartAyah и segmentName/chapterInfo
-        displaySegmentFromJson(displayData, effectiveStartAyah, script, type, chapterInfo, segmentName);
+        applyModeSettings(); // Вызываем здесь тоже на всякий случай
+        displaySurahFromJson(data, startAyah, script);
 
     } catch (error) {
         console.error('Error fetching verses:', error);
-        showToast(`Error fetching data for ${type} ${id}. Please try again.`);
-        inputElement.disabled = true;
+        showToast("Error fetching Surah data. Please try again.");
     } finally {
         console.log(currentMode);
         applyModeSettings();
@@ -304,23 +195,23 @@ async function getQuranSegment(type, id, script) {
 }
 
 /**
- * Applies UI settings based on the current mode (currentMode).
- * Primarily hides/shows the "Hide Ayahs" button.
+ * Применяет настройки UI в зависимости от текущего режима (currentMode).
+ * В основном, скрывает/показывает кнопку "Hide Ayahs".
  */
 function applyModeSettings() {
-    if (!hideAyahsButton) return; // Ensure button exists
+    if (!hideAyahsButton) return; // Убедимся, что кнопка найдена
 
     if (currentMode === 'blind') {
-        hideAyahsButton.style.display = 'none'; // Hide in blind mode
-        // Ensure text is NOT hidden if switching to blind mode
-        // after activating Hide in normal mode
+        hideAyahsButton.style.display = 'none'; // Скрываем кнопку в слепом режиме
+        // Убедимся, что текст НЕ скрыт принудительно, если пользователь переключился на слепой режим
+        // после активации кнопки Hide в нормальном режиме
         if (!isHideAyahsButtonActive) {
-            handleHideAyahsButton(); // "Click" button to hide ayahs
+            handleHideAyahsButton(); // "Нажимаем" кнопку, чтобы показать аяты, если были скрыты
         }
-    } else { // currentMode === 'normal' or 'search'
-        hideAyahsButton.style.display = ''; // Show in normal/search mode
-        // Button state (pressed/not pressed) is maintained by isHideAyahsButtonActive
-        // and applied by applyHideAyahsVisibility if needed
+    } else { // currentMode === 'normal'
+        hideAyahsButton.style.display = ''; // Показываем кнопку в нормальном режиме (сброс на display по умолчанию)
+        // Состояние кнопки (нажата/не нажата) сохраняется из переменной isHideAyahsButtonActive
+        // и применяется в applyHideAyahsVisibility при необходимости
     }
 }
 
@@ -341,87 +232,65 @@ function processAyah(text) {
 }
 
 /**
- * Prepares the verse data: trims whitespace, slices based on startAyah (only for Surah type).
+ * Prepares the verse data: trims whitespace, slices based on startAyah.
  * @param {object} data - The raw API response data.
- * @param {number} startAyah - The ayah number to start from (relevant for Surah).
+ * @param {number} startAyah - The ayah number to start from.
  * @param {string} script - The script type.
- * @returns {object} The processed data object (potentially sliced).
+ * @returns {object} The processed data object.
  */
 function processData(data, startAyah, script) {
-    // Trim initial space if present
     const textProp = `text_${script}`;
-    if (data.verses.length > 0 && data.verses[0][textProp]?.startsWith(' ')) {
+    if (data.verses.length > 0 && data.verses[0][textProp].startsWith(' ')) {
         data.verses[0][textProp] = data.verses[0][textProp].trim();
     }
-    // Slice only if startAyah > 1 (relevant for Surah type)
-    if (startAyah > 1) {
-       // Create a deep copy to avoid modifying the original data if it's cached elsewhere
-       const slicedData = JSON.parse(JSON.stringify(data));
-       slicedData.verses = slicedData.verses.slice(startAyah - 1);
-       return slicedData;
-    }
-    return data; // Return original data if starting from Ayah 1
+    data.verses = data.verses.slice(startAyah - 1);
+    return data;
 }
 
-
-// ИЗМЕНЕНО: Обобщенная функция отображения
 /**
- * Displays the fetched segment content and sets up related elements.
- * @param {object} data - The processed API response data for the segment.
- * @param {number} startAyah - The effective starting ayah number within the segment/surah.
+ * Displays the fetched Surah content and sets up related elements.
+ * @param {object} data - The processed API response data.
+ * @param {number} startAyah - The starting ayah number.
  * @param {string} script - The script type.
- * @param {string} type - The type of segment displayed (SEGMENT_TYPE).
- * @param {object | null} chapterInfo - Info about the Surah (relevant for name/basmallah).
- * @param {string} segmentName - Name of the segment (e.g., "Juz 1").
  */
-function displaySegmentFromJson(data, startAyah, script, type, chapterInfo, segmentName) {
+function displaySurahFromJson(data, startAyah, script) {
     const surahNameEl = document.getElementById("Surah-name");
     const basmallahContainer = document.getElementById("Basmallah");
 
+    data = processData(data, startAyah, script);
     const noTashkeelAyahs = [];
-    let firstVerseActualNumber = -1; // Для определения первого аята в сегменте
 
     const surahContent = data.verses.map((ayah, i) => {
-        const verseKeyParts = ayah.verse_key.split(':');
-        const currentAyahNumberInSurah = parseInt(verseKeyParts[1], 10);
-        if (i === 0) {
-             firstVerseActualNumber = currentAyahNumberInSurah;
-        }
-        const arabicNumber = utils.convertToArabicNumber(currentAyahNumberInSurah);
+        const currentAyahNumber = startAyah + i;
+        const arabicNumber = utils.convertToArabicNumber(currentAyahNumber);
         const processedAyah = processAyah(ayah[`text_${script}`]);
         noTashkeelAyahs.push(processedAyah);
         return `${processedAyah} ﴿${arabicNumber}﴾`;
     }).join(" ");
 
-    // Set Surah Name/Segment Name
-    if (type === SEGMENT_TYPE.SURAH || type === SEGMENT_TYPE.SEARCH) {
-         surahNameEl.textContent = chapterInfo ? `سورة ${chapterInfo.name_arabic}` : '';
-    } else {
-         surahNameEl.textContent = segmentName || ''; // Отображаем имя джуза, хизба и т.д.
-    }
+    const chapterInfo = PROPERTIES_OF_SURAHS.chapters[data.meta.filters.chapter_number - 1];
+    surahNameEl.textContent = `سورة ${chapterInfo.name_arabic}`;
 
-    // Set Basmallah
-    // Показываем басмалу, если:
-    // 1. Это Сура (или поиск) И начинается с 1 аята И есть флаг bismillah_pre
-    // 2. Это НЕ Сура (Джуз, Хизб и т.д.) И сегмент начинается с 1 аята суры (проверено в getQuranSegment) И есть флаг bismillah_pre
-     if (chapterInfo?.bismillah_pre && ( (type === SEGMENT_TYPE.SURAH || type === SEGMENT_TYPE.SEARCH) && startAyah === 1 || (type !== SEGMENT_TYPE.SURAH && type !== SEGMENT_TYPE.SEARCH && firstVerseActualNumber === 1) ) )
-     {
-         basmallahContainer.textContent = BASMALLA;
-     } else {
+    if (startAyah === 1 && chapterInfo.bismillah_pre) {
+        basmallahContainer.textContent = BASMALLA;
+    } else {
         basmallahContainer.textContent = "";
     }
 
-    // Ensure fonts are ready before filling containers and calculating offsets
     document.fonts.ready.then(() => {
         fillContainerWithSpans(surahContent, quranContainer);
 
         const noTashkeelString = utils.createNoTashkeelString(noTashkeelAyahs);
-        utils.fillContainer(noTashkeelString, noTashkeelContainer);
+        utils.fillContainer(noTashkeelString, noTashkeelContainer); // Use utility for hidden div
 
-        // Calculate total characters for CPM
+        // ДОБАВИТЬ: Рассчитываем общее кол-во символов для CPM
+        // Используем длину строки без ташкиля, так как именно ее сравниваем при вводе.
+        // Удаляем пробелы для более точного подсчета символов (опционально, зависит от того, считать ли пробелы)
+        // Если считать пробелы, просто используем noTashkeelString.length
         totalCharsInSegment = noTashkeelString.replace(/\s/g, '').length;
+        // Или если пробелы считать: totalCharsInSegment = noTashkeelString.length;
+        // console.log("Total characters for segment:", totalCharsInSegment); // Для отладки
 
-        // Calculate initial scroll offsets
         originalTopOffset = utils.getOriginalTopOffset(quranContainer);
         secondRowTopOffset = 0;
         refWord = null;
@@ -438,18 +307,17 @@ function displaySegmentFromJson(data, startAyah, script, type, chapterInfo, segm
                 }
             }
         }
-        // Reset ayah start indices
         currentAyahStartIndex_Main = 0;
         currentAyahStartIndex_NoTashkeel = 0;
 
-        applyModeSettings(); // Apply mode settings (e.g., hide button)
+        applyModeSettings();
 
-        // Apply initial hide state if active (only in normal/search mode)
+        // Apply initial hide state if active (только если режим нормальный)
         if (isHideAyahsButtonActive) {
             applyHideAyahsVisibility();
         }
 
-        // Focus input field if ready
+        // ДОБАВИТЬ: Фокусировка на поле ввода после готовности
         if (inputElement && !mainTypingSection.classList.contains('is-hidden')) {
             inputElement.disabled = false;
             inputElement.focus();
@@ -464,76 +332,57 @@ function displaySegmentFromJson(data, startAyah, script, type, chapterInfo, segm
  */
 function fillContainerWithSpans(content, container) {
     utils.clearContainer(container);
-    // Reset scroll offsets before filling
-    originalTopOffset = 0;
-    secondRowTopOffset = 0;
-    refWord = null;
-
+    originalTopOffset = utils.getOriginalTopOffset(container);
     const words = content.split(" ");
     words.forEach((word) => {
-        if (word) { // Avoid creating spans for empty strings from multiple spaces
+        if (word) {
             const span = document.createElement('span');
-            span.textContent = `${word} `; // Add space back for rendering
+            span.textContent = `${word} `;
             container.appendChild(span);
         }
     });
-    // Recalculate original offset *after* filling
-     originalTopOffset = utils.getOriginalTopOffset(container);
-     // Find second row offset immediately if needed (although it's also done in displaySegmentFromJson)
-     const wordSpans = container.querySelectorAll('span');
-     if (wordSpans.length > 0) {
-         refWord = wordSpans[0];
-         for (let i = 1; i < wordSpans.length; i++) {
-             if (wordSpans[i].offsetTop > originalTopOffset) {
-                 secondRowTopOffset = wordSpans[i].offsetTop;
-                 refWord = wordSpans[i];
-                 break;
-             }
-         }
-     }
 }
 
+// --- Input Handling and Logic ---
 
-// --- Input Handling and Logic (Без существенных изменений) ---
 /**
  * Handles the 'input' event on the text field. Compares input with the expected text.
  * Increments error counter on mismatch.
  * @param {Event} event - The input event object.
  */
 function handleInput(event) {
+    // Запускаем таймер, если он еще не запущен
     if (startTime === null) {
         startTimer();
     }
 
     const wordSpans = quranContainer.querySelectorAll('span');
+
+    // Basic boundary checks
     if (noTashkeelWordIndex >= noTashkeelContainer.childNodes.length || mainQuranWordIndex >= wordSpans.length) {
+        // console.warn("Index out of bounds, possibly end of Surah/Ayah segment.");
         return;
     }
-
-    // Защита от ошибки, если узел не текстовый (маловероятно, но возможно)
-     if (noTashkeelContainer.childNodes[noTashkeelWordIndex].nodeType !== Node.TEXT_NODE && !noTashkeelContainer.childNodes[noTashkeelWordIndex].textContent) {
-         console.warn("Unexpected node type or missing text content in noTashkeelContainer at index", noTashkeelWordIndex);
-         // Можно попытаться пропустить этот индекс или остановить обработку
-         // Пропуск может нарушить синхронизацию, лучше остановить и отладить
-         inputElement.disabled = true; // Блокируем ввод для предотвращения дальнейших ошибок
-         showToast("Internal error: Text mismatch. Please reload.");
-         return;
-     }
 
     const currentNoTashkeelWord = noTashkeelContainer.childNodes[noTashkeelWordIndex].textContent;
     const inputText = event.target.value;
     const targetWordSpan = wordSpans[mainQuranWordIndex];
-    if (!targetWordSpan) return; // Доп. проверка
+    if (!targetWordSpan) return;
 
+    // Compare the full input value with the expected word segment
     if (currentNoTashkeelWord.startsWith(inputText)) {
-        targetWordSpan.classList.remove('incorrectWord');
+        // Input is currently correct or partially correct
+        targetWordSpan.classList.remove('incorrectWord'); // Remove error style if it was applied
+
+        // Check if the full word has been typed correctly
         if (inputText === currentNoTashkeelWord) {
             handleCorrectWord(wordSpans);
         }
     } else {
-        if (!targetWordSpan.classList.contains('incorrectWord')) {
+        // Incorrect input character(s) entered
+        if (!targetWordSpan.classList.contains('incorrectWord')) { // Count error only once per incorrect attempt
             utils.applyIncorrectWordStyle(targetWordSpan);
-            incrementError();
+            incrementError(); // Increment and update the error count
         }
     }
 }
@@ -841,7 +690,8 @@ function handleOffsetTop(wordSpans, wordToCheck) {
  */
 function handleHideAyahsButton() {
     isHideAyahsButtonActive = !isHideAyahsButtonActive;
-    hideAyahsButton.textContent = isHideAyahsButtonActive ? "Show Ayahs" : "Hide Ayahs";
+    const button = document.getElementById('hideAyahsButton');
+    button.textContent = isHideAyahsButtonActive ? "Show Ayahs" : "Hide Ayahs";
     applyHideAyahsVisibility(); // Apply the change to spans
 }
 
@@ -883,11 +733,15 @@ function applyHideAyahsVisibility() {
  */
 function processSearch(query) {
     query = query.trim();
+    // if (currentSearchQuery === query && query !== "") { // Don't research same if not empty
+    //     return;
+    // }
 
     if (query === "") {
         // Optionally reload default or do nothing. Let's reload default.
         if (currentSearchQuery !== "1:1") { // Avoid reloading if already at default
-             getQuranSegment(SEGMENT_TYPE.SEARCH, "1:1", 'uthmani'); // Use SEARCH type
+            currentSearchQuery = "1:1";
+            getSurah(1, 1, 'uthmani');
         }
         return;
     }
@@ -913,14 +767,14 @@ function processSearch(query) {
 
     if (processedQuery.length === 2) {
         ayahNum = parseInt(processedQuery[1], 10);
-        // Validation for ayahNum happens inside getQuranSegment now
+        if (ayahNum < 1) {
+            showToast(`Ayah number must be 1 or greater. Starting from Ayah 1.`);
+            ayahNum = 1;
+        }
     }
 
-    // Use the query string "surahNum:ayahNum" as the ID for the search type
-    const searchId = `${surahNum}:${ayahNum}`;
-    currentSearchQuery = query; // Store the original user query if needed
-    // Fetch using the SEARCH type and the combined ID
-    getQuranSegment(SEGMENT_TYPE.SURAH, searchId, 'uthmani');
+    currentSearchQuery = query; // Store the valid query
+    getSurah(surahNum, ayahNum, 'uthmani');
 }
 
 /**
@@ -930,7 +784,7 @@ function processSearch(query) {
 function showToast(message) {
     Toastify({
         text: message,
-        duration: 3500,
+        duration: 3500, // Slightly shorter
         gravity: "bottom",
         position: 'center',
         close: true,
@@ -958,27 +812,48 @@ function updateErrorDisplay() {
     }
 }
 
-// --- Timer Functions (Без изменений) ---
+// --- НАЧАЛО: Обновленные функции таймера ---
+
 /**
  * Updates the timer display element with the current elapsed time (HH:MM:SS.ms).
  */
 function updateTimerDisplay() {
+    // Не обновлять, если таймер не запущен или элемент не найден
     if (!startTime || !timerDisplayElement) return;
+
+    // Используем endTime если таймер остановлен, иначе текущее время
     const now = endTime ? endTime : Date.now();
     const elapsedMilliseconds = now - startTime;
+
+    // Форматируем и отображаем время с помощью обновленной утилиты
     timerDisplayElement.textContent = utils.formatTime(elapsedMilliseconds);
 }
+
 /**
  * Starts the timer. Records the start time and sets a frequent interval for millisecond updates.
  */
 function startTimer() {
-    if (startTime !== null) return;
-    if (timerInterval) clearInterval(timerInterval);
+    // Запускаем, только если таймер еще не запущен (startTime не установлен)
+    if (startTime !== null) {
+        console.log("Timer already running.");
+        return;
+    }
+
+    // Останавливаем любой предыдущий интервал на всякий случай
+    if (timerInterval) {
+        clearInterval(timerInterval);
+    }
+    // Записываем время начала
     startTime = Date.now();
-    endTime = null;
+    endTime = null; // Сбрасываем время окончания при старте
+    // Немедленно обновляем дисплей (покажет 00:00:00.000)
     updateTimerDisplay();
-    timerInterval = setInterval(updateTimerDisplay, 50);
+    // Устанавливаем интервал для частого обновления (например, каждые 50мс)
+    // Это компромисс между плавностью и производительностью
+    timerInterval = setInterval(updateTimerDisplay, 50); // Обновляем 20 раз в секунду
+    // console.log("Timer started"); // Для отладки
 }
+
 /**
  * Stops the timer by clearing the interval.
  */
@@ -987,178 +862,163 @@ function stopTimer() {
         clearInterval(timerInterval);
         timerInterval = null;
         endTime = Date.now();
-        updateTimerDisplay(); // Final update for accuracy
+        // Выполним последнее обновление для точности, так как интервал мог сработать позже
+        updateTimerDisplay();
+        console.log("Timer stopped at:", endTime); // Для отладки
     }
 }
+
 /**
  * Resets the timer: stops it, resets start time, and sets display to "00:00:00.000".
  */
 function resetTimer() {
-    stopTimer();
-    startTime = null;
-    endTime = null;
+    stopTimer(); // Останавливаем таймер
+    startTime = null; // !!! Важно: Сбрасываем startTime, чтобы startTimer сработал при следующем вводе
+    endTime = null; // Сбрасываем и время окончания
     if (timerDisplayElement) {
+        // Сбрасываем текст на дисплее
         timerDisplayElement.textContent = "00:00:00.000";
     }
+    // console.log("Timer reset"); // Для отладки
 }
 
-// --- Table Population and Handling ---
-
-/**
- * Populates the Surah selection table.
- */
 function populateSurahSelectionTable() {
-    if (!PROPERTIES_OF_SURAHS?.chapters || !surahSelectionTBody) {
+    if (!PROPERTIES_OF_SURAHS || !PROPERTIES_OF_SURAHS.chapters || !surahSelectionTBody) {
         console.error("Surah data or table body not available for populating.");
-        if (surahSelectionTBody) surahSelectionTBody.innerHTML = '<tr><td colspan="15">Failed to load Surah list.</td></tr>';
+        // Можно отобразить сообщение об ошибке в таблице
+        surahSelectionTBody.innerHTML = '<tr><td colspan="15">Не удалось загрузить список сур.</td></tr>';
         return;
     }
-    surahSelectionTBody.innerHTML = ''; // Clear previous rows
+
+    // Очищаем предыдущие строки (если есть)
+    surahSelectionTBody.innerHTML = '';
     const allResults = loadAllResults();
 
+    // Заполняем таблицу данными
     PROPERTIES_OF_SURAHS.chapters.forEach(chapter => {
         const row = document.createElement('tr');
-        row.dataset.segmentId = chapter.id; // Use generic dataset attribute
+        row.setAttribute('data-surah-id', chapter.id); // Сохраняем ID суры для обработчика клика
 
-        row.innerHTML = `
-            <td>${chapter.id}</td>
-            <td style="font-family: 'IslamicFont', sans-serif;">${chapter.name_arabic}</td>
-            <td>${chapter.name_simple}</td>
-            <td>${chapter.revelation_place.charAt(0).toUpperCase() + chapter.revelation_place.slice(1)}</td>
-            <td>${utils.convertToArabicNumber(chapter.verses_count)}</td>
-        `;
+        // Создаем ячейки для каждой колонки
+        const cellId = document.createElement('td');
+        cellId.textContent = chapter.id;
 
+        const cellNameArabic = document.createElement('td');
+        cellNameArabic.textContent = chapter.name_arabic;
+        cellNameArabic.style.fontFamily = "'IslamicFont', sans-serif"; // Применяем шрифт Корана
+
+        const cellNameSimple = document.createElement('td');
+        cellNameSimple.textContent = chapter.name_simple;
+
+        const cellRevelationPlace = document.createElement('td');
+        cellRevelationPlace.textContent = chapter.revelation_place.charAt(0).toUpperCase() + chapter.revelation_place.slice(1); // Делаем первую букву заглавной
+
+        const cellVersesCount = document.createElement('td');
+        cellVersesCount.textContent = utils.convertToArabicNumber(chapter.verses_count); // Используем арабские цифры
+
+        // Добавляем ячейки в строку
+        row.appendChild(cellId);
+        row.appendChild(cellNameArabic);
+        row.appendChild(cellNameSimple);
+        row.appendChild(cellRevelationPlace);
+        row.appendChild(cellVersesCount);
+
+        // --- Ячейки для режимов (Normal: 5-8, Blind: 9-12) ---
         ['normal', 'blind'].forEach(mode => {
-            // ИЗМЕНЕНО: Используем SEGMENT_TYPE.SURAH при получении результата
-            const resultData = getResult(SEGMENT_TYPE.SURAH, chapter.id, mode);
-            const displayTime = resultData?.time ?? '-';
-            const displayErrors = resultData?.errors ?? '-';
+            const resultData = allResults[chapter.id]?.[mode] || null; // Получаем результат
+
+            // Форматируем данные для отображения (или ставим '-')
+            // const displayTime = resultData?.time ? resultData.time.split(':').slice(1).join(':') : '-'; // MM:SS.sss
+            const displayTime = resultData?.time ? resultData.time : '-'; // HH:MM:SS.sss
+            const displayErrors = resultData?.errors ?? '-'; // Используем ?? для null/undefined
             const displayScore = resultData?.score ?? '-';
             const displayRank = resultData?.rank ?? '-';
 
-            row.innerHTML += `
-                <td class="result-time-${mode}">${displayTime}</td>
-                <td class="result-errors-${mode}">${displayErrors}</td>
-                <td class="result-score-${mode}">${displayScore}</td>
-                <td class="result-rank-${mode}">${displayRank}</td>
-                <td class="has-text-centered">
-                    <button class="button is-ghost start-segment-button" data-mode="${mode}">Start</button>
-                </td>
-            `;
+            // Ячейка для Времени (Time)
+            const cellTime = document.createElement('td');
+            cellTime.className = `result-time-${mode}`; // Добавляем классы для легкого поиска при обновлении
+            cellTime.textContent = displayTime;
+            row.appendChild(cellTime);
+
+            // Ячейка для Ошибок (Missclick)
+            const cellErrors = document.createElement('td');
+            cellErrors.className = `result-errors-${mode}`;
+            cellErrors.textContent = displayErrors;
+            row.appendChild(cellErrors);
+
+            // Ячейка для Очков (Score)
+            const cellScore = document.createElement('td');
+            cellScore.className = `result-score-${mode}`;
+            cellScore.textContent = displayScore;
+            row.appendChild(cellScore);
+
+            // Ячейка для Ранга (Rank)
+            const cellRank = document.createElement('td');
+            cellRank.className = `result-rank-${mode}`;
+            cellRank.textContent = displayRank;
+            row.appendChild(cellRank);
+
+            // Ячейка для Кнопки (Start)
+            const cellButton = document.createElement('td');
+            const startButton = document.createElement('button');
+            cellButton.className = 'has-text-centered';
+            startButton.className = 'button is-ghost start-surah-button';
+            startButton.dataset.mode = mode;
+            startButton.textContent = 'Start';
+            cellButton.appendChild(startButton);
+            row.appendChild(cellButton);
         });
+
+        // Добавляем строку в тело таблицы
         surahSelectionTBody.appendChild(row);
     });
 
-    // Add event listener using delegation
-    surahSelectionTBody.addEventListener('click', handleStartSegment);
+    // Добавляем обработчик событий на тело таблицы (event delegation)
+    surahSelectionTBody.addEventListener('click', handleStartSurah);
 }
 
-
-// ДОБАВЛЕНО: Функция для заполнения общих таблиц (Juz, Hizb, Rub, Page)
 /**
- * Populates a generic selection table (Juz, Hizb, Rub', Page).
- * @param {string} type - The segment type (SEGMENT_TYPE constant).
- * @param {number} count - The total number of segments of this type.
- * @param {HTMLElement} tbodyElement - The tbody element of the table.
- * @param {string} labelPrefix - The label prefix (e.g., "Juz", "Hizb").
- */
-function populateGenericSelectionTable(type, count, tbodyElement, labelPrefix) {
-    if (!tbodyElement) {
-        console.error(`Table body not found for type: ${type}`);
-        return;
-    }
-    tbodyElement.innerHTML = ''; // Clear previous rows
-    const allResults = loadAllResults();
-
-    for (let i = 1; i <= count; i++) {
-        const row = document.createElement('tr');
-        row.dataset.segmentId = i; // Use generic dataset attribute
-
-        row.innerHTML = `<td>${labelPrefix} ${i}</td>`; // Cell for the number/label
-
-        ['normal', 'blind'].forEach(mode => {
-            const resultData = getResult(type, i, mode); // Use type here
-            const displayTime = resultData?.time ?? '-';
-            const displayErrors = resultData?.errors ?? '-';
-            const displayScore = resultData?.score ?? '-';
-            const displayRank = resultData?.rank ?? '-';
-
-            row.innerHTML += `
-                <td class="result-time-${mode}">${displayTime}</td>
-                <td class="result-errors-${mode}">${displayErrors}</td>
-                <td class="result-score-${mode}">${displayScore}</td>
-                <td class="result-rank-${mode}">${displayRank}</td>
-                <td class="has-text-centered">
-                    <button class="button is-ghost start-segment-button" data-mode="${mode}">Start</button>
-                </td>
-            `;
-        });
-        tbodyElement.appendChild(row);
-    }
-     // Add event listener using delegation
-    tbodyElement.addEventListener('click', handleStartSegment);
-}
-
-
-// ИЗМЕНЕНО: Общий обработчик для всех кнопок Start
-/**
- * Handles clicks on the "Start" buttons within any selection table.
+ * Handles clicks on the "Start" buttons within the Surah selection table.
  * @param {Event} event - The click event object.
  */
-function handleStartSegment(event) {
-    const clickedButton = event.target.closest('.start-segment-button');
-    if (!clickedButton) return; // Click wasn't on a start button
+function handleStartSurah(event) {
+    // Проверяем, был ли клик именно по кнопке "Start"
+    const clickedButton = event.target.closest('.start-surah-button');
+    if (!clickedButton) {
+        return; // Клик не по кнопке, ничего не делаем
+    }
 
     const clickedRow = clickedButton.closest('tr');
-    const tbodyElement = clickedRow?.parentElement; // Get the parent tbody
-    if (!tbodyElement || !clickedRow?.dataset.segmentId) {
-         console.error("Could not find row, tbody, or segment ID for clicked button.");
-         return; // Failed to find row or segment ID
+    if (!clickedRow || !clickedRow.dataset.surahId) {
+        return; // Не удалось найти строку или ID суры
     }
 
-    const selectedSegmentId = clickedRow.dataset.segmentId; // Get ID from row
-    const selectedMode = clickedButton.dataset.mode; // Get mode from button
+    const selectedSurahId = parseInt(clickedRow.dataset.surahId, 10);
+    const selectedMode = clickedButton.dataset.mode; // Получаем режим из data-атрибута кнопки
 
-    // Determine the type based on the tbody's ID
-    let selectedType;
-    switch (tbodyElement.id) {
-        case 'surah-selection-tbody': selectedType = SEGMENT_TYPE.SURAH; break;
-        case 'juz-selection-tbody': selectedType = SEGMENT_TYPE.JUZ; break;
-        case 'hizb-selection-tbody': selectedType = SEGMENT_TYPE.HIZB; break;
-        case 'rub-selection-tbody': selectedType = SEGMENT_TYPE.RUB; break;
-        case 'page-selection-tbody': selectedType = SEGMENT_TYPE.PAGE; break;
-        default:
-             console.error("Unknown tbody ID:", tbodyElement.id);
-             return;
-    }
+    if (!isNaN(selectedSurahId) && (selectedMode === 'normal' || selectedMode === 'blind')) {
+        // Сохраняем выбранные параметры
+        currentSurahId = selectedSurahId; // Сохраняем ID суры для последующего сохранения результата
+        currentMode = selectedMode;     // Сохраняем выбранный режим
 
-
-    if (selectedSegmentId && selectedMode && selectedType) {
-        // Save the selected parameters (type is already set by switch)
-        currentSelectionId = selectedSegmentId; // Save the ID (might be number or string for surah)
-        currentMode = selectedMode;     // Save selected mode
-
-        // Hide selection table view
+        // Скрываем таблицу выбора
         if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden');
-        // Show main typing interface
+        // Показываем основной интерфейс ввода
         if (mainTypingSection) mainTypingSection.classList.remove('is-hidden');
 
-        // Load the selected segment
-        getQuranSegment(selectedType, selectedSegmentId, 'uthmani');
+        // Загружаем выбранную суру (всегда с первого аята)
+        // processSearch уже обрабатывает формат "число:число", поэтому используем его
+        processSearch(`${selectedSurahId}:1`);
 
-        // Apply mode-specific UI settings immediately
+        // Дополнительно: Применяем специфичные для режима настройки UI *сразу*
         applyModeSettings();
 
-    } else {
-         console.error("Missing data for starting segment:", { selectedSegmentId, selectedMode, selectedType });
     }
 }
 
-
-// --- View Toggling ---
-
+// --- ДОБАВЛЕНО: Функция для переключения видимости секций ---
 /**
- * Toggles visibility between the main typing interface and the selection table view.
+ * Toggles visibility between the main typing interface and the Surah selection table.
  */
 function toggleSurahSelectionView() {
     if (!mainTypingSection || !surahSelectionSection) return;
@@ -1166,91 +1026,88 @@ function toggleSurahSelectionView() {
     const isTypingVisible = !mainTypingSection.classList.contains('is-hidden');
 
     if (isTypingVisible) {
-        // --- Switching FROM typing TO selection view ---
+        // --- Переключаемся С ввода НА выбор суры ---
         mainTypingSection.classList.add('is-hidden');
         surahSelectionSection.classList.remove('is-hidden');
-        stopTimer(); // Stop timer if running
-        // Clear search input and typing input when switching TO selection
+        stopTimer();
+        // resetTimer(); 
+        // Очищаем поле поиска и ввода при переходе к выбору суры
         const surahInputElement = document.getElementById("Surah-selection-input");
         if (surahInputElement) surahInputElement.value = '';
         if (inputElement) {
-            inputElement.value = ''; // Clear typing field
-            inputElement.classList.remove('incorrectWord');
+            inputElement.value = ''; // Очищаем поле ввода текста Корана
+            inputElement.classList.remove('incorrectWord'); // Убираем стиль ошибки
         }
-        // ДОБАВЛЕНО: Опционально, обновляем данные таблиц при показе
-        // Это полезно, если результаты могли измениться во время печати
-        // Но может быть медленно, если таблицы большие. Пока не будем обновлять.
-        // populateAllSelectionTables(); // Раскомментировать для обновления при каждом показе
     } else {
-        // --- Switching FROM selection view TO typing ---
+        // --- Переключаемся С выбора суры НА ввод ---
         surahSelectionSection.classList.add('is-hidden');
         mainTypingSection.classList.remove('is-hidden');
 
-        applyModeSettings(); // Ensure Hide Ayahs button state is correct
+        applyModeSettings(); // Убедимся, что кнопка Hide Ayahs отображается/скрыта правильно
 
-        // Enable and focus input if content is already loaded
-        if (inputElement && quranContainer.hasChildNodes()) {
+        // Разблокируем поле ввода и фокусируемся, если сура уже загружена
+        if (inputElement && quranContainer.hasChildNodes()) { // Проверяем, есть ли контент
             inputElement.disabled = false;
             inputElement.focus();
         } else if (!quranContainer.hasChildNodes()) {
-            // If no content (e.g., initial load error), load default
-            getQuranSegment(SEGMENT_TYPE.SURAH, "1:1", 'uthmani'); // Load default Surah
+            // Если сура еще не загружена (например, при первом запуске была ошибка),
+            // можно загрузить суру по умолчанию или оставить поле заблокированным
+            // Давайте загрузим по умолчанию для надежности
+            processSearch("1:1");
         }
     }
 }
-
-// --- Results Calculation and Storage ---
 
 /**
  * Calculates and displays the final results (CPM, Score, Rank)
  */
 function calculateAndDisplayResults() {
-    // Check if timer actually ran and segment has characters
-    if (!startTime || !endTime || totalCharsInSegment <= 0) {
-        console.warn("Cannot calculate results: Timer not run or no characters.", { startTime, endTime, totalCharsInSegment });
-        resetResultsDisplay();
-        // Don't save results if they can't be calculated
+    if (!startTime || !endTime) {
+        console.warn("Cannot calculate results: Timer was not stopped properly.");
+        resetResultsDisplay(); // Сбрасываем отображение, если времени нет
         return;
     }
 
     const elapsedMilliseconds = endTime - startTime;
     const numberOfErrors = totalErrors;
-    const numberOfChars = totalCharsInSegment;
+    const numberOfChars = totalCharsInSegment; // Используем сохраненное значение
 
-    // 1. Base metrics
+    // Проверка на валидность данных перед расчетом
+    if (numberOfChars <= 0) {
+        console.warn("Cannot calculate results: No characters in the segment.");
+        resetResultsDisplay(); // Сбрасываем, если нет символов
+        return;
+    }
+
+    // 1. Базовые метрики
     const cpm = utils.calculateCPM(numberOfChars, elapsedMilliseconds);
     const errorRate = utils.calculateErrorRate(numberOfErrors, numberOfChars);
     const adjustedCPM = utils.calculateAdjustedCPM(cpm, numberOfErrors);
 
-    // 2. Final score
+    // 2. Итоговый балл
     const score = utils.calculateScore(adjustedCPM, TARGET_CPM);
 
-    // 3. Rank
+    // 3. Ранг
     const rank = utils.determineRank(score, errorRate);
 
-    // 4. Display results
-    if (acpmDisplay) acpmDisplay.textContent = Math.round(adjustedCPM);
-    if (scoreDisplay) scoreDisplay.textContent = `${score}%`;
-    if (rankDisplay) rankDisplay.textContent = rank;
+    // 4. Отображение результатов
+    if (acpmDisplay) acpmDisplay.textContent = Math.round(adjustedCPM); // Отображаем округленный aCPM
+    if (scoreDisplay) scoreDisplay.textContent = `${score}%`; // Отображаем счет с %
+    if (rankDisplay) rankDisplay.textContent = rank; // Отображаем ранг
 
-    // --- Save Result ---
-    // Only save if the segment was started from a selection table (not search)
-    // AND if we have a valid type and ID
-    if (currentSelectionType !== SEGMENT_TYPE.SEARCH && currentSelectionId !== null) {
-         const formattedTime = utils.formatTime(elapsedMilliseconds);
-         const resultData = {
-             score: score,
-             time: formattedTime,
-             errors: numberOfErrors,
-             rank: rank
-         };
-         saveResult(currentSelectionType, currentSelectionId, currentMode, resultData);
-    } else {
-        console.log("Result not saved (Search mode or invalid ID/Type)");
-    }
-    console.log(`Results - Type: ${currentSelectionType}, ID: ${currentSelectionId}, Mode: ${currentMode} | Time: ${utils.formatTime(elapsedMilliseconds)}, Errors: ${numberOfErrors}, Chars: ${numberOfChars}, CPM: ${cpm.toFixed(0)}, aCPM: ${adjustedCPM.toFixed(0)}, Score: ${score}, Rank: ${rank}`); // Debugging
+    // --- ДОБАВЛЕНО: Сохранение и обновление таблицы ---
+    const formattedTime = utils.formatTime(elapsedMilliseconds); // Получаем форматированное время для сохранения
+    const resultData = {
+        score: score,
+        time: formattedTime,
+        errors: numberOfErrors,
+        rank: rank
+    };
+
+    // Сохраняем результат, используя текущие ID суры и режим
+    saveResult(currentSurahId, currentMode, resultData);
+    console.log(`CPM: ${cpm}, ER: ${errorRate}%, aCPM: ${adjustedCPM}, Score: ${score}, ${adjustedCPM / TARGET_CPM}, Rank: ${rank}`); // Для отладки
 }
-
 
 /**
  * Resets the result display elements to their initial state.
@@ -1261,181 +1118,107 @@ function resetResultsDisplay() {
     if (rankDisplay) rankDisplay.textContent = "-";
 }
 
-// ИЗМЕНЕНО: Функции работы с Local Storage для поддержки типов
 /**
- * Loads all saved results from Local Storage.
- * @returns {object} Object with results like { type: { id: { mode: result } } } or empty object.
+ * Загружает все сохраненные результаты из Local Storage.
+ * @returns {object} Объект с результатами вида { surahId: { normal: result, blind: result } } или пустой объект.
  */
 function loadAllResults() {
     try {
         const storedResults = localStorage.getItem(RESULTS_STORAGE_KEY);
-        // Basic validation: check if it's parseable JSON
-        if (storedResults) {
-            const parsed = JSON.parse(storedResults);
-             // Add a check to ensure it's an object (basic structure check)
-             if (typeof parsed === 'object' && parsed !== null) {
-                 return parsed;
-             } else {
-                 console.warn("Stored results format is invalid, returning empty object.");
-                 localStorage.removeItem(RESULTS_STORAGE_KEY); // Clear invalid data
-                 return {};
-             }
-        }
-        return {};
+        return storedResults ? JSON.parse(storedResults) : {};
     } catch (error) {
         console.error("Error loading results from Local Storage:", error);
-         // Attempt to clear potentially corrupted data
-         localStorage.removeItem(RESULTS_STORAGE_KEY);
-        return {}; // Return empty object on error
+        return {}; // Возвращаем пустой объект в случае ошибки
     }
 }
 
 /**
- * Gets saved result for a specific segment type, ID, and mode.
- * @param {string} type Segment type (SEGMENT_TYPE constant).
- * @param {number|string} id Segment ID.
- * @param {'normal'|'blind'} mode Mode.
- * @returns {object | null} Result object { score, time, errors, rank } or null.
+ * Получает сохраненный результат для конкретной суры и режима.
+ * @param {number|string} surahId ID суры.
+ * @param {'normal'|'blind'} mode Режим ('normal' или 'blind').
+ * @returns {object | null} Объект с результатом { time, errors, rank } или null, если результат не найден.
  */
-function getResult(type, id, mode) {
+function getResult(surahId, mode) {
     const allResults = loadAllResults();
-    // Check if type exists, then id, then mode
-    return allResults?.[type]?.[id]?.[mode] || null;
+    return allResults[surahId]?.[mode] || null;
 }
 
 /**
- * Saves result for a specific segment type, ID, and mode to Local Storage.
- * Only saves if the new score is better than the existing one.
- * @param {string} type Segment type (SEGMENT_TYPE constant).
- * @param {number|string} id Segment ID.
- * @param {'normal'|'blind'} mode Mode.
- * @param {object} resultData Result object { score, time, errors, rank }.
+ * Сохраняет результат для конкретной суры и режима в Local Storage.
+ * @param {number|string} surahId ID суры.
+ * @param {'normal'|'blind'} mode Режим ('normal' или 'blind').
+ * @param {object} resultData Объект с результатом { time: string, errors: number, rank: string }.
  */
-function saveResult(type, id, mode, resultData) {
-    // Basic validation
-    if (!type || id === null || id === undefined || !mode || !resultData || typeof resultData.score !== 'number') {
-        console.error("Cannot save result: Invalid data provided.", { type, id, mode, resultData });
+function saveResult(surahId, mode, resultData) {
+    if (!surahId || !mode || !resultData) {
+        console.error("Cannot save result: Invalid data provided.", { surahId, mode, resultData });
         return;
     }
-
     const allResults = loadAllResults();
-
-    // Ensure structure exists
-    if (!allResults[type]) {
-        allResults[type] = {};
-    }
-    if (!allResults[type][id]) {
-        allResults[type][id] = {};
+    if (!allResults[surahId]) {
+        allResults[surahId] = {}; // Создаем запись для суры, если ее нет
     }
 
-    const existingResult = allResults[type][id]?.[mode];
-    let shouldSave = true; // Assume we should save by default
-
-    if (existingResult && typeof existingResult.score === 'number') {
-        // Compare scores only if existing score is a valid number
-        if (resultData.score <= existingResult.score) {
-            console.log(`Result for ${type} ${id} (${mode}) not saved (Score ${resultData.score} is not better than ${existingResult.score})`);
-            shouldSave = false; // Don't save if score isn't better
+    if (allResults[surahId][mode]) {
+        if (allResults[surahId][mode].score >= resultData.score) {
+            console.log("The result is worse");
+            return;
         }
     }
 
-    if (shouldSave) {
-        allResults[type][id][mode] = resultData; // Save or overwrite result
-        if (!existingResult || resultData.score > (existingResult?.score ?? -1) ) {
-             showToast("New Record!"); // Show only if it's a new record or better score
-        }
+    allResults[surahId][mode] = resultData; // Save result
+    showToast("New Record!");
 
-
-        try {
-            localStorage.setItem(RESULTS_STORAGE_KEY, JSON.stringify(allResults));
-            console.log(`Result saved for ${type} ${id} (${mode}):`, resultData);
-            // Update the display in the corresponding table immediately
-             updateSegmentTableResultDisplay(type, id, mode, resultData);
-        } catch (error) {
-            console.error("Error saving results to Local Storage:", error);
-            showToast("Could not save your result.");
-        }
+    try {
+        localStorage.setItem(RESULTS_STORAGE_KEY, JSON.stringify(allResults));
+        console.log(`Result saved for Surah ${surahId}, Mode ${mode}:`, resultData); // Отладка
+    } catch (error) {
+        console.error("Error saving results to Local Storage:", error);
+        showToast("Could not save your result."); // Уведомляем пользователя
+    } finally {
+        // Обновляем отображение результата в таблице выбора сур
+        updateTableResultDisplay(currentSurahId, currentMode, resultData);
     }
 }
 
-
-// ИЗМЕНЕНО: Обновление отображения результата в таблице
 /**
- * Updates the result display (Time, Errors, Score, Rank) in the specific selection table row.
- * @param {string} type Segment type (SEGMENT_TYPE constant).
- * @param {number|string} id Segment ID.
- * @param {'normal'|'blind'} mode Mode.
- * @param {object} resultData New result object { score, time, errors, rank }.
+ * Обновляет отображение результата (Time, Errors, Rank) в таблице выбора сур после завершения.
+ * @param {number|string} surahId ID суры, для которой обновляем результат.
+ * @param {'normal'|'blind'} mode Режим, для которого обновляем результат.
+ * @param {object} resultData Новый объект результата { score, time, errors, rank }.
  */
-function updateSegmentTableResultDisplay(type, id, mode, resultData) {
-    let tbodyElement;
-    // Find the correct tbody based on type
-    switch (type) {
-        case SEGMENT_TYPE.SURAH: tbodyElement = surahSelectionTBody; break;
-        case SEGMENT_TYPE.JUZ: tbodyElement = juzSelectionTBody; break;
-        case SEGMENT_TYPE.HIZB: tbodyElement = hizbSelectionTBody; break;
-        case SEGMENT_TYPE.RUB: tbodyElement = rubSelectionTBody; break;
-        case SEGMENT_TYPE.PAGE: tbodyElement = pageSelectionTBody; break;
-        default: return; // Unknown type
-    }
+function updateTableResultDisplay(surahId, mode, resultData) {
+    if (!surahSelectionTBody || !resultData) return;
 
-    if (!tbodyElement || !resultData) return;
+    const row = surahSelectionTBody.querySelector(`tr[data-surah-id="${surahId}"]`);
+    if (!row) return;
 
-    // Find the row using the data-segment-id attribute
-    const row = tbodyElement.querySelector(`tr[data-segment-id="${id}"]`);
-    if (!row) {
-        console.warn(`Row not found in table for ${type} ${id}`);
-        return;
-    }
-
-    // Find cells by class within the row
+    // Находим ячейки по добавленным классам
     const timeCell = row.querySelector(`.result-time-${mode}`);
     const errorsCell = row.querySelector(`.result-errors-${mode}`);
     const scoreCell = row.querySelector(`.result-score-${mode}`);
     const rankCell = row.querySelector(`.result-rank-${mode}`);
 
-    // Format data for display (handle null/undefined)
+    // Форматируем данные для отображения
     const displayTime = resultData.time ?? '-';
     const displayErrors = resultData.errors ?? '-';
     const displayScore = resultData.score ?? '-';
     const displayRank = resultData.rank ?? '-';
 
-    // Update cell content
-    if (timeCell) timeCell.textContent = displayTime;
-    if (errorsCell) errorsCell.textContent = displayErrors;
-    if (scoreCell) scoreCell.textContent = displayScore;
-    if (rankCell) rankCell.textContent = displayRank;
-}
-
-// --- Tab Switching Logic --- ДОБАВЛЕНО
-/**
- * Handles clicks on the tab links.
- * @param {Event} event - The click event.
- */
-function handleTabClick(event) {
-    const clickedTab = event.currentTarget; // The <li> element
-    const targetTabName = clickedTab.dataset.tab;
-
-    if (!targetTabName || clickedTab.classList.contains('is-active')) {
-        return; // Do nothing if clicking the active tab or invalid tab
+    // Обновляем текст в ячейках
+    if (timeCell) {
+        timeCell.textContent = displayTime;
     }
-
-    // Remove 'is-active' from all tabs and hide all content
-    tabLinks.forEach(link => link.classList.remove('is-active'));
-    tabContentContainers.forEach(container => container.classList.add('is-hidden'));
-
-    // Activate the clicked tab
-    clickedTab.classList.add('is-active');
-
-    // Show the corresponding content
-    const targetContent = document.getElementById(`tab-content-${targetTabName}`);
-    if (targetContent) {
-        targetContent.classList.remove('is-hidden');
-    } else {
-        console.error(`Tab content not found for: tab-content-${targetTabName}`);
+    if (errorsCell) {
+        errorsCell.textContent = displayErrors;
+    }
+    if (scoreCell) {
+        scoreCell.textContent = displayScore;
+    }
+    if (rankCell) {
+        rankCell.textContent = displayRank;
     }
 }
-
 
 // --- Event Listeners Setup ---
 
@@ -1448,134 +1231,120 @@ function addListeners() {
         isDarkMode = utils.toggleDarkMode(isDarkMode);
     });
 
-    // Hide Ayahs Button (only works in normal/search mode)
-    hideAyahsButton.addEventListener('click', handleHideAyahsButton);
+    // Hide Ayahs Button
+    document.getElementById('hideAyahsButton').addEventListener('click', handleHideAyahsButton);
 
     // Main Input Field
     inputElement.addEventListener("input", handleInput);
     inputElement.addEventListener("focus", () => { // Clear potential error style on focus
         const wordSpans = quranContainer.querySelectorAll('span');
         if (mainQuranWordIndex < wordSpans.length) {
-             const currentSpan = wordSpans[mainQuranWordIndex];
-             if (currentSpan) { // Check if span exists
-                currentSpan.classList.remove('incorrectWord');
-             }
+            wordSpans[mainQuranWordIndex].classList.remove('incorrectWord');
         }
     });
 
     // Ayah Repetition Input
     repeatCountInput.addEventListener('change', (event) => {
         const newCount = parseInt(event.target.value, 10);
-        ayahRepeatCount = (!isNaN(newCount) && newCount >= 1) ? newCount : 1;
-        event.target.value = ayahRepeatCount; // Update input field
-         if (ayahRepeatCount !== newCount) showToast("Ayah repetition count must be 1 or greater.");
+        if (!isNaN(newCount) && newCount >= 1) {
+            ayahRepeatCount = newCount;
+        } else {
+            event.target.value = ayahRepeatCount; // Revert if invalid
+            showToast("Ayah repetition count must be 1 or greater.");
+        }
     });
-    repeatCountInput.addEventListener('input', (event) => { // Allow only numbers
+    repeatCountInput.addEventListener('input', (event) => { // Prevent non-numeric faster
         event.target.value = event.target.value.replace(/[^0-9]/g, '');
     });
 
-    // Word Repetition Input
+    // Word Repetition Input (New)
     wordRepeatCountInput.addEventListener('change', (event) => {
         const newCount = parseInt(event.target.value, 10);
-        wordRepeatCount = (!isNaN(newCount) && newCount >= 1) ? newCount : 1;
-         event.target.value = wordRepeatCount; // Update input field
-         if (wordRepeatCount !== newCount) showToast("Word repetition count must be 1 or greater.");
+        if (!isNaN(newCount) && newCount >= 1) {
+            wordRepeatCount = newCount;
+            // Reset current word repetition if count changes mid-word? Optional.
+            // currentWordRepetition = 1; // Let's not reset for now.
+        } else {
+            event.target.value = wordRepeatCount; // Revert if invalid
+            showToast("Word repetition count must be 1 or greater.");
+        }
     });
-    wordRepeatCountInput.addEventListener('input', (event) => { // Allow only numbers
+    wordRepeatCountInput.addEventListener('input', (event) => { // Prevent non-numeric faster
         event.target.value = event.target.value.replace(/[^0-9]/g, '');
     });
 
 
-    // Surah Selection Input and Button (Top Search Bar)
+    // Surah Selection Input and Button
     const surahInputElement = document.getElementById("Surah-selection-input");
     const surahProcessButton = document.getElementById("Display-Surah-button");
 
     surahProcessButton.addEventListener("click", () => {
-        processSearch(surahInputElement.value); // This now calls getQuranSegment with type SEARCH
+        currentMode = 'UserSearch';
+        processSearch(surahInputElement.value);
     });
     surahInputElement.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
             event.preventDefault();
-            processSearch(surahInputElement.value); // This now calls getQuranSegment with type SEARCH
+            currentMode = 'UserSearch';
+            processSearch(surahInputElement.value);
         }
     });
 
-    // Toggle Selection View Button
+    // Auto-focus on the main input field when the page loads
+    document.addEventListener("DOMContentLoaded", () => {
+        inputElement.focus();
+    });
+
     if (changeSurahButton) {
         changeSurahButton.addEventListener('click', toggleSurahSelectionView);
-    }
-
-     // --- ДОБАВЛЕНО: Tab Link Listeners ---
-     if (tabLinks) {
-        tabLinks.forEach(link => {
-            link.addEventListener('click', handleTabClick);
-        });
-    }
-
-    // --- ИЗМЕНЕНО: Start Button listeners are now added dynamically in population functions ---
-    // The handleStartSegment function handles events via delegation.
-
-    // Auto-focus on the main input field when the page loads (if typing section is visible)
-     document.addEventListener("DOMContentLoaded", () => {
-        if (!mainTypingSection.classList.contains('is-hidden') && inputElement) {
-           inputElement.focus();
-        }
-    });
+    };
 }
 
 // --- Application Entry Point ---
 
-// ДОБАВЛЕНО: Функция для вызова всех функций заполнения таблиц
-function populateAllSelectionTables() {
-    populateSurahSelectionTable();
-    populateGenericSelectionTable(SEGMENT_TYPE.JUZ, COUNT.JUZ, juzSelectionTBody, "Juz");
-    populateGenericSelectionTable(SEGMENT_TYPE.HIZB, COUNT.HIZB, hizbSelectionTBody, "Hizb");
-    populateGenericSelectionTable(SEGMENT_TYPE.RUB, COUNT.RUB, rubSelectionTBody, "Rub'");
-    populateGenericSelectionTable(SEGMENT_TYPE.PAGE, COUNT.PAGE, pageSelectionTBody, "Page");
-}
-
 /**
  * Initializes the application.
+ * @param {number} [initialSurah=1] - Initial Surah number.
+ * @param {number} [initialAyah=1] - Initial Ayah number.
+ * @param {string} [initialScript='uthmani'] - Initial script.
  */
-function runApp() {
+function runApp(initialSurah = 1, initialAyah = 1, initialScript = 'uthmani') {
     cacheDOMElements();
     utils.initDarkMode(isDarkMode);
     addListeners();
-    resetResultsDisplay(); // Reset footer display
+    resetResultsDisplay();
 
     setupSurahData()
         .then(() => {
-            // Populate selection tables in the background (they are initially hidden)
-            populateAllSelectionTables();
+            // Заполняем таблицу В ФОНЕ (она пока скрыта)
+            populateSurahSelectionTable();
 
-            // Ensure typing section is visible and selection section is hidden initially
+            // --- Возвращаем загрузку суры по умолчанию ---
+            currentSearchQuery = `${initialSurah}:${initialAyah}`;
+            if (inputElement) inputElement.disabled = false;
+            // Убедимся, что секция ввода видима, а выбора - скрыта ПЕРЕД загрузкой суры
             if (mainTypingSection) mainTypingSection.classList.remove('is-hidden');
             if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden');
-
-            // Load the default Surah 1, Ayah 1 for the typing view
-             // Set initial state before loading
-            currentSelectionType = SEGMENT_TYPE.SURAH; // Default type
-            currentSelectionId = 1; // Default ID
-            currentMode = 'normal'; // Default mode
-            currentSearchQuery = "1:1";
-            getQuranSegment(SEGMENT_TYPE.SURAH, 1, 'uthmani'); // Load Surah 1
+            // Загружаем суру
+            getSurah(initialSurah, initialAyah, initialScript);
+            // --- Конец возврата ---
 
         })
         .catch(error => {
             console.error('Error during application initialization:', error);
             showToast("Failed to initialize application data. Please refresh.");
             resetResultsDisplay();
-            // Show error message in the main typing area
-            if (mainTypingSection) mainTypingSection.classList.remove('is-hidden');
-            if (quranContainer) quranContainer.innerHTML = '<p class="has-text-danger has-text-centered">Error loading data. Try refreshing the page.</p>';
-            if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden');
+            // Показываем ошибку, например, в основной секции
+            if (mainTypingSection) mainTypingSection.classList.remove('is-hidden'); // Показать секцию
+            if (quranContainer) quranContainer.innerHTML = '<p class="has-text-danger has-text-centered">Error loading data. Try refreshing the page.</p>'; // Сообщение об ошибке
+            if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden'); // Скрыть секцию выбора
             if (errorCountDisplay) errorCountDisplay.textContent = "Error";
             if (inputElement) inputElement.disabled = true;
-            if (acpmDisplay) acpmDisplay.textContent = "Error";
+            if (acpmDisplay) acpmDisplay.textContent = "Error"; // Доп. индикация
             if (scoreDisplay) scoreDisplay.textContent = "Error";
             if (rankDisplay) rankDisplay.textContent = "Error";
         });
 }
 
 // Run the application
-runApp();
+runApp(1, 1);

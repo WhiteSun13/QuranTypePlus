@@ -375,65 +375,61 @@ html[dir="rtl"] .toastify.on.toastify-left {
 }
 
 /*-------------------------------------------*\\
-    # SURAH SELECTION TABLE THEME ADAPTATION
+    # SELECTION TABLE THEME ADAPTATION
 \\*------------------------------------------*/
-#surah-selection-table tbody tr {
+.selection-table tbody tr {
     cursor: pointer; /* Показывает, что строка кликабельна */
 }
 
-/* Стили для контейнера таблицы (если нужно) */
-#surah-selection-section .table-container {
-    max-height: 70vh; /* Ограничиваем высоту, чтобы таблица не была слишком длинной */
-    overflow-y: auto; /* Добавляем прокрутку, если таблица не помещается */
-}
 /* Общие стили таблицы */
-#surah-selection-table {
+.selection-table {
     background-color: var(--background-color); /* Основной фон таблицы = фон страницы */
     color: var(--text-color); /* Основной цвет текста */
 }
 
 /* Стили заголовка таблицы (thead) */
-#surah-selection-table thead {
+.selection-table thead {
     background-color: var(--input-background-color); /* Фон заголовка чуть темнее/светлее фона */
     border-bottom: 2px solid var(--input-border-color); /* Четкая линия под заголовком */
 }
 
-#surah-selection-table thead th {
+.selection-table thead th {
     color: var(--text-color); /* Цвет текста в заголовке */
     border-color: var(--input-border-color); /* Цвет границ ячеек заголовка */
     border-width: 0 0 2px 1px; /* Убираем верхнюю/правую, задаем нижнюю/левую */
     vertical-align: middle; /* Выравнивание по центру */
 }
-#surah-selection-table thead th:first-child {
+.selection-table thead th:first-child {
      border-left-width: 0; /* Убираем левую границу у первой ячейки */
 }
 
 
 /* Стили тела таблицы (tbody) */
-#surah-selection-table tbody td {
+.selection-table tbody td {
     color: var(--text-color); /* Цвет текста в ячейках */
     border-color: var(--input-border-color); /* Цвет границ ячеек */
     vertical-align: middle; /* Выравнивание по центру */
 }
 
 /* Адаптация для is-bordered */
-#surah-selection-table.is-bordered th,
-#surah-selection-table.is-bordered td {
+.selection-table.is-bordered th,
+.selection-table.is-bordered td {
     border-color: var(--input-border-color);
 }
 
-/* Адаптация для is-striped (чередующиеся строки) */
-#surah-selection-table.is-striped tbody tr:nth-child(even) {
-    /* Используем цвет фона инпутов для чередования */
-    background-color: var(--input-background-color);
-}
-#surah-selection-table.is-striped tbody tr:nth-child(odd) {
+.table.is-striped tbody tr:nth-child(1n) {
     /* Явно задаем основной фон для нечетных строк */
-     background-color: var(--background-color);
+     background-color: var(--background-color) !important;
+}
+
+/* Адаптация для is-striped (чередующиеся строки) */
+.table.is-striped tbody tr:nth-child(2n) {
+    /* Используем цвет фона инпутов для чередования */
+    background-color: var(--input-background-color) !important;
 }
 
 /* Новый стиль :hover, использующий переменные */
-#surah-selection-table.is-hoverable tbody tr:hover {
+.selection-table.is-hoverable tbody tr:hover {
     /* Используем цвет фона футера или другой подходящий для выделения */
     background-color: var(--footer-background-color) !important; /* Используем !important для переопределения Bulma */
     /* Убедимся, что текст читаем при наведении */
@@ -443,7 +439,7 @@ html[dir="rtl"] .toastify.on.toastify-left {
 
 /* Стиль для контейнера таблицы (ограничение высоты и прокрутка) */
 #surah-selection-section .table-container {
-    max-height: 70vh;
+    max-height: 65vh;
     overflow-y: auto;
     border: 1px solid var(--input-border-color); /* Добавляем границу к контейнеру */
     border-radius: 6px; /* Скругляем углы контейнера (как у Bulma card/input) */
@@ -492,4 +488,41 @@ html[dir="rtl"] .toastify.on.toastify-left {
 /* Опционально: Углы (если есть и горизонтальный и вертикальный скроллбар) */
 #surah-selection-section .table-container::-webkit-scrollbar-corner {
   background: var(--input-background-color); /* Цвет угла */
+}
+
+/*------------------------------------*\\
+    # TAB STYLING (Остается без изменений)
+\\*------------------------------------*/
+
+/* Скрытие неактивного контента вкладок */
+.tab-content.is-hidden {
+    display: none;
+}
+
+/* Адаптация вкладок под тему */
+.tabs.is-boxed li.is-active a {
+    background-color: var(--background-color); /* Фон активной вкладки */
+    border-color: var(--input-border-color);
+    border-bottom-color: transparent !important; /* Убираем нижнюю границу */
+}
+.tabs.is-boxed a {
+    border-color: var(--input-border-color);
+    color: var(--link-color);
+}
+.tabs.is-boxed a:hover {
+    background-color: var(--input-background-color); /* Фон при наведении */
+    border-bottom-color: var(--input-border-color) !important;
+    color: var(--link-hover-color);
+}
+.tabs ul {
+    border-bottom-color: var(--input-border-color) !important;
+}
+
+.selection-table .start-segment-button:hover {
+     background-color: var(--input-background-color); /* Слегка выделяем фон */
+}
+
+/* Убедимся, что вертикальное выравнивание в таблицах выбора хорошее */
+.selection-table tbody td {
+    vertical-align: middle;
 }

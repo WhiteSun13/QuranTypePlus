@@ -69,7 +69,7 @@
                    </button>
                     <!-- Кнопка Изменить Суру -->
                     <button class="button is-text image-button" id="change-surah-button" aria-label="Изменить Суру" title="Изменить Суру">
-                        <img src="public/images/MenuLight.svg" alt="Menu" id="light-menu-icon" class="button-icon"> 
+                        <img src="public/images/MenuLight.svg" alt="Menu" id="light-menu-icon" class="button-icon">
                         <img src="public/images/MenuDark.svg" alt="Menu" id="dark-menu-icon" class="theme-icon button-icon">
                     </button>
                 </div>
@@ -77,33 +77,135 @@
         </nav>
     </section>
 
+    <!-- ИЗМЕНЕНО: Добавлены data-tab атрибуты и начальное состояние -->
     <section class="section pt-4 pb-4 is-hidden" id="surah-selection-section">
         <div class="container">
-            <div class="table-container">
-                <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth" id="surah-selection-table">
-                    <thead>
-                        <tr>
-                          <th rowspan="2">№</th>
-                          <th rowspan="2">سورة</th>
-                          <th rowspan="2">Surah</th>
-                          <th rowspan="2">Period</th>
-                          <th rowspan="2">Ayah</th>
-                          <th colspan="5">Normal Mode</th>
-                          <th colspan="5">Blind Mode</th>
-                        </tr>
-                        <tr>
-                          <th>Time</th><th>Missclick</th><th>Score</th><th>Rank</th><th></th>
-                          <th>Time</th><th>Missclick</th><th>Score</th><th>Rank</th><th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="surah-selection-tbody">
-                        <!-- Строки будут добавлены динамически с помощью JavaScript -->
-                    </tbody>
-                </table>
+            <div class="tabs is-centered is-boxed">
+                <ul>
+                    <li class="is-active" data-tab="surah"><a>Surah</a></li>
+                    <li data-tab="juz"><a>Juz</a></li>
+                    <li data-tab="hizb"><a>Hizb</a></li>
+                    <li data-tab="rub"><a>Rub'</a></li>
+                    <li data-tab="page"><a>Page</a></li>
+                </ul>
+            </div>
+            <!-- ИЗМЕНЕНО: Добавлен класс .tab-content для всех контейнеров -->
+            <div id="tab-content-surah" class="tab-content">
+                <!-- СУЩЕСТВУЮЩИЙ КОНТЕЙНЕР ТАБЛИЦЫ СУР -->
+                <div class="table-container">
+                    <table class="table is-bordered selection-table is-striped is-narrow is-hoverable is-fullwidth" id="surah-selection-table"> <!-- ДОБАВЛЕНО: selection-table class -->
+                        <thead>
+                            <tr>
+                              <th rowspan="2">№</th>
+                              <th rowspan="2">سورة</th>
+                              <th rowspan="2">Surah</th>
+                              <th rowspan="2">Period</th>
+                              <th rowspan="2">Ayah</th>
+                              <th colspan="5">Normal Mode</th>
+                              <th colspan="5">Blind Mode</th>
+                            </tr>
+                            <tr>
+                              <th>Time</th><th>Errors</th><th>Score</th><th>Rank</th><th></th> <!-- Normal -->
+                              <th>Time</th><th>Errors</th><th>Score</th><th>Rank</th><th></th> <!-- Blind -->
+                            </tr>
+                        </thead>
+                        <tbody id="surah-selection-tbody">
+                            <!-- Строки для Сур будут добавлены динамически -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ИЗМЕНЕНО: Добавлен is-hidden и класс .tab-content, класс .selection-table -->
+            <div id="tab-content-juz" class="tab-content is-hidden">
+                <div class="table-container">
+                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth selection-table" id="juz-selection-table"> <!-- ДОБАВЛЕНО: selection-table class -->
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Juz №</th>
+                                <th colspan="5">Normal Mode</th>
+                                <th colspan="5">Blind Mode</th>
+                              </tr>
+                              <tr>
+                                <th>Time</th><th>Errors</th><th>Score</th><th>Rank</th><th></th> <!-- Normal -->
+                                <th>Time</th><th>Errors</th><th>Score</th><th>Rank</th><th></th> <!-- Blind -->
+                              </tr>
+                        </thead>
+                        <tbody id="juz-selection-tbody">
+                             <!-- Строки для Джузов будут добавлены динамически -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ИЗМЕНЕНО: Добавлен is-hidden и класс .tab-content, класс .selection-table -->
+            <div id="tab-content-hizb" class="tab-content is-hidden">
+                <div class="table-container">
+                     <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth selection-table" id="hizb-selection-table"> <!-- ДОБАВЛЕНО: selection-table class -->
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Hizb №</th>
+                                <th colspan="5">Normal Mode</th>
+                                <th colspan="5">Blind Mode</th>
+                              </tr>
+                              <tr>
+                                <th>Time</th><th>Errors</th><th>Score</th><th>Rank</th><th></th> <!-- Normal -->
+                                <th>Time</th><th>Errors</th><th>Score</th><th>Rank</th><th></th> <!-- Blind -->
+                              </tr>
+                        </thead>
+                        <tbody id="hizb-selection-tbody">
+                            <!-- Строки для Хизбов будут добавлены динамически -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ИЗМЕНЕНО: Добавлен is-hidden и класс .tab-content, класс .selection-table -->
+            <div id="tab-content-rub" class="tab-content is-hidden">
+                 <div class="table-container">
+                     <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth selection-table" id="rub-selection-table"> <!-- ДОБАВЛЕНО: selection-table class -->
+                        <thead>
+                             <tr>
+                                <th rowspan="2">Rub' №</th>
+                                <th colspan="5">Normal Mode</th>
+                                <th colspan="5">Blind Mode</th>
+                              </tr>
+                              <tr>
+                                <th>Time</th><th>Errors</th><th>Score</th><th>Rank</th><th></th> <!-- Normal -->
+                                <th>Time</th><th>Errors</th><th>Score</th><th>Rank</th><th></th> <!-- Blind -->
+                              </tr>
+                        </thead>
+                        <tbody id="rub-selection-tbody">
+                             <!-- Строки для Руб аль Хизб будут добавлены динамически -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ИЗМЕНЕНО: Добавлен is-hidden и класс .tab-content, класс .selection-table -->
+             <div id="tab-content-page" class="tab-content is-hidden">
+                 <div class="table-container">
+                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth selection-table" id="page-selection-table"> <!-- ДОБАВЛЕНО: selection-table class -->
+                         <thead>
+                            <tr>
+                                <th rowspan="2">Page №</th>
+                                <th colspan="5">Normal Mode</th>
+                                <th colspan="5">Blind Mode</th>
+                              </tr>
+                              <tr>
+                                <th>Time</th><th>Errors</th><th>Score</th><th>Rank</th><th></th> <!-- Normal -->
+                                <th>Time</th><th>Errors</th><th>Score</th><th>Rank</th><th></th> <!-- Blind -->
+                              </tr>
+                        </thead>
+                        <tbody id="page-selection-tbody">
+                            <!-- Строки для Страниц будут добавлены динамически -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </section>
-    
+
     <!-- Оберните существующий основной контент в этот div -->
     <div id="main-typing-section">
 
@@ -180,21 +282,21 @@
                         <span id="timerDisplay" class="has-text-weight-bold">00:00:00.000</span>
                     </div>
                 </div>
-                <!-- ДОБАВИТЬ: Adjusted CPM -->
+                <!-- ДОБАВЛЕНО: Adjusted CPM -->
                 <div class="level-item has-text-centered">
                     <div id="acpmContainer">
                         <span id="acpmLabel" class="has-text-weight-bold">aCPM: </span>
                         <span id="acpmDisplay" class="has-text-weight-bold">-</span>
                     </div>
                 </div>
-                <!-- ДОБАВИТЬ: Score -->
+                <!-- ДОБАВЛЕНО: Score -->
                 <div class="level-item has-text-centered">
                     <div id="scoreContainer">
                         <span id="scoreLabel" class="has-text-weight-bold">Score: </span>
                         <span id="scoreDisplay" class="has-text-weight-bold">-</span>
                     </div>
                 </div>
-                <!-- ДОБАВИТЬ: Rank -->
+                <!-- ДОБАВЛЕНО: Rank -->
                 <div class="level-item has-text-centered">
                     <div id="rankContainer">
                         <span id="rankLabel" class="has-text-weight-bold">Rank: </span>
