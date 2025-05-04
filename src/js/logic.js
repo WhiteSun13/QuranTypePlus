@@ -1452,7 +1452,7 @@ function handleRestartKey(event) {
             event.preventDefault();
 
             // Show a confirmation toast
-            showToast(`Restarting ${currentSelectionType} ${currentSelectionId}`);
+            // showToast(`Restarting ${currentSelectionType} ${currentSelectionId}`);
 
             // Call getQuranSegment with the currently selected type and ID to restart
             // The getQuranSegment function already handles resetting state.
