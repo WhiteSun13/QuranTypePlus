@@ -919,6 +919,7 @@ function processSearch(query) {
     // Use the query string "surahNum:ayahNum" as the ID for the search type
     const searchId = `${surahNum}:${ayahNum}`;
     currentSearchQuery = query; // Store the original user query if needed
+    currentMode = 'search';
     // Fetch using the SEARCH type and the combined ID
     getQuranSegment(SEGMENT_TYPE.SURAH, searchId, 'uthmani');
 }
