@@ -1436,6 +1436,31 @@ function handleTabClick(event) {
     }
 }
 
+/**
+ * Handles keydown events globally, specifically looking for the Escape key to restart.
+ * @param {KeyboardEvent} event The keyboard event object.
+ */
+function handleRestartKey(event) {
+    // Check if the pressed key is Escape
+    if (event.key === 'Escape') {
+        // Check if the main typing section is currently visible
+        // and if we have a valid segment selected (type and ID are not null)
+        if (mainTypingSection && !mainTypingSection.classList.contains('is-hidden') &&
+            currentSelectionType !== null && currentSelectionId !== null)
+        {
+            // Prevent default Escape behavior (like closing modals, if any were present)
+            event.preventDefault();
+
+            // Show a confirmation toast
+            showToast(`Restarting ${currentSelectionType} ${currentSelectionId}`);
+
+            // Call getQuranSegment with the currently selected type and ID to restart
+            // The getQuranSegment function already handles resetting state.
+            // We keep the current script ('uthmani') and current mode.
+            getQuranSegment(currentSelectionType, currentSelectionId, 'uthmani');
+        }
+    }
+}
 
 // --- Event Listeners Setup ---
 
@@ -1521,6 +1546,9 @@ function addListeners() {
            inputElement.focus();
         }
     });
+
+    // Global listener for the Escape key to restart the current segment
+    document.addEventListener('keydown', handleRestartKey);
 }
 
 // --- Application Entry Point ---
