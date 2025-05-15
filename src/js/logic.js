@@ -202,7 +202,7 @@ async function getQuranSegment(type, id, script) {
                 // Обновляем currentSelectionId, если он был строкой
                 currentSelectionId = surahNum; // Для сохранения результатов используем только номер суры
             } else {
-                 surahNum = parseInt(id, 10);
+                surahNum = parseInt(id, 10);
             }
             url += `chapter_number=${surahNum}`;
             // Получаем имя суры позже, после загрузки данных
@@ -248,25 +248,25 @@ async function getQuranSegment(type, id, script) {
             let surahNumToUse = currentSelectionId; // Используем сохраненный номер суры
             chapterInfo = PROPERTIES_OF_SURAHS?.chapters?.[surahNumToUse - 1];
 
-             // Обрабатываем случай, когда ID содержал номер аята
+            // Обрабатываем случай, когда ID содержал номер аята
             if (typeof id === 'string' && id.includes(':')) {
-                 const parts = id.split(':');
-                 effectiveStartAyah = parseInt(parts[1], 10) || 1;
-             } else {
-                 effectiveStartAyah = 1; // По умолчанию для суры, если не указан аят
-             }
+                const parts = id.split(':');
+                effectiveStartAyah = parseInt(parts[1], 10) || 1;
+            } else {
+                effectiveStartAyah = 1; // По умолчанию для суры, если не указан аят
+            }
 
             const totalAyahs = data.verses.length;
-             // Validate startAyah only for Surah type fetched by chapter_number
-             if (effectiveStartAyah < 1) {
-                 effectiveStartAyah = 1;
-             } else if (effectiveStartAyah > totalAyahs) {
-                 const surahName = chapterInfo?.name_simple || `Surah ${surahNumToUse}`;
-                 showToast(`${surahName} only contains ${utils.convertToArabicNumber(totalAyahs)} ayahs. Starting from Ayah ${utils.convertToArabicNumber(1)}.`);
-                 effectiveStartAyah = 1;
-             }
+            // Validate startAyah only for Surah type fetched by chapter_number
+            if (effectiveStartAyah < 1) {
+                effectiveStartAyah = 1;
+            } else if (effectiveStartAyah > totalAyahs) {
+                const surahName = chapterInfo?.name_simple || `Surah ${surahNumToUse}`;
+                showToast(`${surahName} only contains ${utils.convertToArabicNumber(totalAyahs)} ayahs. Starting from Ayah ${utils.convertToArabicNumber(1)}.`);
+                effectiveStartAyah = 1;
+            }
             // Обрезаем данные для суры, если нужно начать не с 1 аята
-             displayData = processData(data, effectiveStartAyah, script);
+            displayData = processData(data, effectiveStartAyah, script);
         } else {
             // Для Juz, Hizb и т.д. API уже возвращает нужный сегмент, startAyah не нужен
             effectiveStartAyah = 1; // Считаем, что для этих сегментов всегда начинаем с "первого" аята сегмента
@@ -276,11 +276,11 @@ async function getQuranSegment(type, id, script) {
                 const firstVerseParts = firstVerseKey.split(':');
                 const chapterNumberOfFirstVerse = parseInt(firstVerseParts[0], 10);
                 const ayahNumberOfFirstVerse = parseInt(firstVerseParts[1], 10);
-                 chapterInfo = PROPERTIES_OF_SURAHS?.chapters?.[chapterNumberOfFirstVerse - 1];
-                 // Показываем басмалу только если сегмент начинается с 1-го аята суры (кроме 9-й)
-                 if (ayahNumberOfFirstVerse !== 1 || chapterNumberOfFirstVerse === 9 || chapterNumberOfFirstVerse === 1) {
-                     chapterInfo = { ...chapterInfo, bismillah_pre: false }; // Переопределяем для случая не первого аята
-                 }
+                chapterInfo = PROPERTIES_OF_SURAHS?.chapters?.[chapterNumberOfFirstVerse - 1];
+                // Показываем басмалу только если сегмент начинается с 1-го аята суры (кроме 9-й)
+                if (ayahNumberOfFirstVerse !== 1 || chapterNumberOfFirstVerse === 9 || chapterNumberOfFirstVerse === 1) {
+                    chapterInfo = { ...chapterInfo, bismillah_pre: false }; // Переопределяем для случая не первого аята
+                }
             }
         }
 
@@ -355,10 +355,10 @@ function processData(data, startAyah, script) {
     }
     // Slice only if startAyah > 1 (relevant for Surah type)
     if (startAyah > 1) {
-       // Create a deep copy to avoid modifying the original data if it's cached elsewhere
-       const slicedData = JSON.parse(JSON.stringify(data));
-       slicedData.verses = slicedData.verses.slice(startAyah - 1);
-       return slicedData;
+        // Create a deep copy to avoid modifying the original data if it's cached elsewhere
+        const slicedData = JSON.parse(JSON.stringify(data));
+        slicedData.verses = slicedData.verses.slice(startAyah - 1);
+        return slicedData;
     }
     return data; // Return original data if starting from Ayah 1
 }
@@ -385,7 +385,7 @@ function displaySegmentFromJson(data, startAyah, script, type, chapterInfo, segm
         const verseKeyParts = ayah.verse_key.split(':');
         const currentAyahNumberInSurah = parseInt(verseKeyParts[1], 10);
         if (i === 0) {
-             firstVerseActualNumber = currentAyahNumberInSurah;
+            firstVerseActualNumber = currentAyahNumberInSurah;
         }
         const arabicNumber = utils.convertToArabicNumber(currentAyahNumberInSurah);
         const processedAyah = processAyah(ayah[`text_${script}`]);
@@ -395,19 +395,18 @@ function displaySegmentFromJson(data, startAyah, script, type, chapterInfo, segm
 
     // Set Surah Name/Segment Name
     if (type === SEGMENT_TYPE.SURAH || type === SEGMENT_TYPE.SEARCH) {
-         surahNameEl.textContent = chapterInfo ? `سورة ${chapterInfo.name_arabic}` : '';
+        surahNameEl.textContent = chapterInfo ? `سورة ${chapterInfo.name_arabic}` : '';
     } else {
-         surahNameEl.textContent = segmentName || ''; // Отображаем имя джуза, хизба и т.д.
+        surahNameEl.textContent = segmentName || ''; // Отображаем имя джуза, хизба и т.д.
     }
 
     // Set Basmallah
     // Показываем басмалу, если:
     // 1. Это Сура (или поиск) И начинается с 1 аята И есть флаг bismillah_pre
     // 2. Это НЕ Сура (Джуз, Хизб и т.д.) И сегмент начинается с 1 аята суры (проверено в getQuranSegment) И есть флаг bismillah_pre
-     if (chapterInfo?.bismillah_pre && ( (type === SEGMENT_TYPE.SURAH || type === SEGMENT_TYPE.SEARCH) && startAyah === 1 || (type !== SEGMENT_TYPE.SURAH && type !== SEGMENT_TYPE.SEARCH && firstVerseActualNumber === 1) ) )
-     {
-         basmallahContainer.textContent = BASMALLA;
-     } else {
+    if (chapterInfo?.bismillah_pre && ((type === SEGMENT_TYPE.SURAH || type === SEGMENT_TYPE.SEARCH) && startAyah === 1 || (type !== SEGMENT_TYPE.SURAH && type !== SEGMENT_TYPE.SEARCH && firstVerseActualNumber === 1))) {
+        basmallahContainer.textContent = BASMALLA;
+    } else {
         basmallahContainer.textContent = "";
     }
 
@@ -478,19 +477,19 @@ function fillContainerWithSpans(content, container) {
         }
     });
     // Recalculate original offset *after* filling
-     originalTopOffset = utils.getOriginalTopOffset(container);
-     // Find second row offset immediately if needed (although it's also done in displaySegmentFromJson)
-     const wordSpans = container.querySelectorAll('span');
-     if (wordSpans.length > 0) {
-         refWord = wordSpans[0];
-         for (let i = 1; i < wordSpans.length; i++) {
-             if (wordSpans[i].offsetTop > originalTopOffset) {
-                 secondRowTopOffset = wordSpans[i].offsetTop;
-                 refWord = wordSpans[i];
-                 break;
-             }
-         }
-     }
+    originalTopOffset = utils.getOriginalTopOffset(container);
+    // Find second row offset immediately if needed (although it's also done in displaySegmentFromJson)
+    const wordSpans = container.querySelectorAll('span');
+    if (wordSpans.length > 0) {
+        refWord = wordSpans[0];
+        for (let i = 1; i < wordSpans.length; i++) {
+            if (wordSpans[i].offsetTop > originalTopOffset) {
+                secondRowTopOffset = wordSpans[i].offsetTop;
+                refWord = wordSpans[i];
+                break;
+            }
+        }
+    }
 }
 
 
@@ -511,14 +510,14 @@ function handleInput(event) {
     }
 
     // Защита от ошибки, если узел не текстовый (маловероятно, но возможно)
-     if (noTashkeelContainer.childNodes[noTashkeelWordIndex].nodeType !== Node.TEXT_NODE && !noTashkeelContainer.childNodes[noTashkeelWordIndex].textContent) {
-         console.warn("Unexpected node type or missing text content in noTashkeelContainer at index", noTashkeelWordIndex);
-         // Можно попытаться пропустить этот индекс или остановить обработку
-         // Пропуск может нарушить синхронизацию, лучше остановить и отладить
-         inputElement.disabled = true; // Блокируем ввод для предотвращения дальнейших ошибок
-         showToast("Internal error: Text mismatch. Please reload.");
-         return;
-     }
+    if (noTashkeelContainer.childNodes[noTashkeelWordIndex].nodeType !== Node.TEXT_NODE && !noTashkeelContainer.childNodes[noTashkeelWordIndex].textContent) {
+        console.warn("Unexpected node type or missing text content in noTashkeelContainer at index", noTashkeelWordIndex);
+        // Можно попытаться пропустить этот индекс или остановить обработку
+        // Пропуск может нарушить синхронизацию, лучше остановить и отладить
+        inputElement.disabled = true; // Блокируем ввод для предотвращения дальнейших ошибок
+        showToast("Internal error: Text mismatch. Please reload.");
+        return;
+    }
 
     const currentNoTashkeelWord = noTashkeelContainer.childNodes[noTashkeelWordIndex].textContent;
     const inputText = event.target.value;
@@ -690,12 +689,11 @@ function resetCurrentAyahUI(lastCorrectWordIndex) {
             span.classList.remove('correctWord', 'incorrectWord');
 
             // Reset visibility based on hide button state, but only if not hidden by scrolling
-            if (span.style.display !== 'none') {
-                if (isHideAyahsButtonActive) {
-                    span.style.visibility = 'hidden';
-                } else {
-                    span.style.visibility = 'visible';
-                }
+            span.style.display = ''
+            if (isHideAyahsButtonActive) {
+                span.style.visibility = 'hidden';
+            } else {
+                span.style.visibility = 'visible';
             }
         }
     }
@@ -887,7 +885,7 @@ function processSearch(query) {
     if (query === "") {
         // Optionally reload default or do nothing. Let's reload default.
         if (currentSearchQuery !== "1:1") { // Avoid reloading if already at default
-             getQuranSegment(SEGMENT_TYPE.SEARCH, "1:1", 'uthmani'); // Use SEARCH type
+            getQuranSegment(SEGMENT_TYPE.SEARCH, "1:1", 'uthmani'); // Use SEARCH type
         }
         return;
     }
@@ -1096,7 +1094,7 @@ function populateGenericSelectionTable(type, count, tbodyElement, labelPrefix) {
         });
         tbodyElement.appendChild(row);
     }
-     // Add event listener using delegation
+    // Add event listener using delegation
     tbodyElement.addEventListener('click', handleStartSegment);
 }
 
@@ -1113,8 +1111,8 @@ function handleStartSegment(event) {
     const clickedRow = clickedButton.closest('tr');
     const tbodyElement = clickedRow?.parentElement; // Get the parent tbody
     if (!tbodyElement || !clickedRow?.dataset.segmentId) {
-         console.error("Could not find row, tbody, or segment ID for clicked button.");
-         return; // Failed to find row or segment ID
+        console.error("Could not find row, tbody, or segment ID for clicked button.");
+        return; // Failed to find row or segment ID
     }
 
     const selectedSegmentId = clickedRow.dataset.segmentId; // Get ID from row
@@ -1129,8 +1127,8 @@ function handleStartSegment(event) {
         case 'rub-selection-tbody': selectedType = SEGMENT_TYPE.RUB; break;
         case 'page-selection-tbody': selectedType = SEGMENT_TYPE.PAGE; break;
         default:
-             console.error("Unknown tbody ID:", tbodyElement.id);
-             return;
+            console.error("Unknown tbody ID:", tbodyElement.id);
+            return;
     }
 
 
@@ -1151,7 +1149,7 @@ function handleStartSegment(event) {
         applyModeSettings();
 
     } else {
-         console.error("Missing data for starting segment:", { selectedSegmentId, selectedMode, selectedType });
+        console.error("Missing data for starting segment:", { selectedSegmentId, selectedMode, selectedType });
     }
 }
 
@@ -1238,14 +1236,14 @@ function calculateAndDisplayResults() {
     // Only save if the segment was started from a selection table (not search)
     // AND if we have a valid type and ID
     if (currentSelectionType !== SEGMENT_TYPE.SEARCH && currentSelectionId !== null) {
-         const formattedTime = utils.formatTime(elapsedMilliseconds);
-         const resultData = {
-             score: score,
-             time: formattedTime,
-             errors: numberOfErrors,
-             rank: rank
-         };
-         saveResult(currentSelectionType, currentSelectionId, currentMode, resultData);
+        const formattedTime = utils.formatTime(elapsedMilliseconds);
+        const resultData = {
+            score: score,
+            time: formattedTime,
+            errors: numberOfErrors,
+            rank: rank
+        };
+        saveResult(currentSelectionType, currentSelectionId, currentMode, resultData);
     } else {
         console.log("Result not saved (Search mode or invalid ID/Type)");
     }
@@ -1273,20 +1271,20 @@ function loadAllResults() {
         // Basic validation: check if it's parseable JSON
         if (storedResults) {
             const parsed = JSON.parse(storedResults);
-             // Add a check to ensure it's an object (basic structure check)
-             if (typeof parsed === 'object' && parsed !== null) {
-                 return parsed;
-             } else {
-                 console.warn("Stored results format is invalid, returning empty object.");
-                 localStorage.removeItem(RESULTS_STORAGE_KEY); // Clear invalid data
-                 return {};
-             }
+            // Add a check to ensure it's an object (basic structure check)
+            if (typeof parsed === 'object' && parsed !== null) {
+                return parsed;
+            } else {
+                console.warn("Stored results format is invalid, returning empty object.");
+                localStorage.removeItem(RESULTS_STORAGE_KEY); // Clear invalid data
+                return {};
+            }
         }
         return {};
     } catch (error) {
         console.error("Error loading results from Local Storage:", error);
-         // Attempt to clear potentially corrupted data
-         localStorage.removeItem(RESULTS_STORAGE_KEY);
+        // Attempt to clear potentially corrupted data
+        localStorage.removeItem(RESULTS_STORAGE_KEY);
         return {}; // Return empty object on error
     }
 }
@@ -1342,8 +1340,8 @@ function saveResult(type, id, mode, resultData) {
 
     if (shouldSave) {
         allResults[type][id][mode] = resultData; // Save or overwrite result
-        if (!existingResult || resultData.score > (existingResult?.score ?? -1) ) {
-             showToast("New Record!"); // Show only if it's a new record or better score
+        if (!existingResult || resultData.score > (existingResult?.score ?? -1)) {
+            showToast("New Record!"); // Show only if it's a new record or better score
         }
 
 
@@ -1351,7 +1349,7 @@ function saveResult(type, id, mode, resultData) {
             localStorage.setItem(RESULTS_STORAGE_KEY, JSON.stringify(allResults));
             console.log(`Result saved for ${type} ${id} (${mode}):`, resultData);
             // Update the display in the corresponding table immediately
-             updateSegmentTableResultDisplay(type, id, mode, resultData);
+            updateSegmentTableResultDisplay(type, id, mode, resultData);
         } catch (error) {
             console.error("Error saving results to Local Storage:", error);
             showToast("Could not save your result.");
@@ -1447,8 +1445,7 @@ function handleRestartKey(event) {
         // Check if the main typing section is currently visible
         // and if we have a valid segment selected (type and ID are not null)
         if (mainTypingSection && !mainTypingSection.classList.contains('is-hidden') &&
-            currentSelectionType !== null && currentSelectionId !== null)
-        {
+            currentSelectionType !== null && currentSelectionId !== null) {
             // Prevent default Escape behavior (like closing modals, if any were present)
             event.preventDefault();
 
@@ -1482,10 +1479,10 @@ function addListeners() {
     inputElement.addEventListener("focus", () => { // Clear potential error style on focus
         const wordSpans = quranContainer.querySelectorAll('span');
         if (mainQuranWordIndex < wordSpans.length) {
-             const currentSpan = wordSpans[mainQuranWordIndex];
-             if (currentSpan) { // Check if span exists
+            const currentSpan = wordSpans[mainQuranWordIndex];
+            if (currentSpan) { // Check if span exists
                 currentSpan.classList.remove('incorrectWord');
-             }
+            }
         }
     });
 
@@ -1494,7 +1491,7 @@ function addListeners() {
         const newCount = parseInt(event.target.value, 10);
         ayahRepeatCount = (!isNaN(newCount) && newCount >= 1) ? newCount : 1;
         event.target.value = ayahRepeatCount; // Update input field
-         if (ayahRepeatCount !== newCount) showToast("Ayah repetition count must be 1 or greater.");
+        if (ayahRepeatCount !== newCount) showToast("Ayah repetition count must be 1 or greater.");
     });
     repeatCountInput.addEventListener('input', (event) => { // Allow only numbers
         event.target.value = event.target.value.replace(/[^0-9]/g, '');
@@ -1504,8 +1501,8 @@ function addListeners() {
     wordRepeatCountInput.addEventListener('change', (event) => {
         const newCount = parseInt(event.target.value, 10);
         wordRepeatCount = (!isNaN(newCount) && newCount >= 1) ? newCount : 1;
-         event.target.value = wordRepeatCount; // Update input field
-         if (wordRepeatCount !== newCount) showToast("Word repetition count must be 1 or greater.");
+        event.target.value = wordRepeatCount; // Update input field
+        if (wordRepeatCount !== newCount) showToast("Word repetition count must be 1 or greater.");
     });
     wordRepeatCountInput.addEventListener('input', (event) => { // Allow only numbers
         event.target.value = event.target.value.replace(/[^0-9]/g, '');
@@ -1531,8 +1528,8 @@ function addListeners() {
         changeSurahButton.addEventListener('click', toggleSurahSelectionView);
     }
 
-     // --- ДОБАВЛЕНО: Tab Link Listeners ---
-     if (tabLinks) {
+    // --- ДОБАВЛЕНО: Tab Link Listeners ---
+    if (tabLinks) {
         tabLinks.forEach(link => {
             link.addEventListener('click', handleTabClick);
         });
@@ -1542,9 +1539,9 @@ function addListeners() {
     // The handleStartSegment function handles events via delegation.
 
     // Auto-focus on the main input field when the page loads (if typing section is visible)
-     document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", () => {
         if (!mainTypingSection.classList.contains('is-hidden') && inputElement) {
-           inputElement.focus();
+            inputElement.focus();
         }
     });
 
@@ -1582,7 +1579,7 @@ function runApp() {
             if (surahSelectionSection) surahSelectionSection.classList.add('is-hidden');
 
             // Load the default Surah 1, Ayah 1 for the typing view
-             // Set initial state before loading
+            // Set initial state before loading
             currentSelectionType = SEGMENT_TYPE.SURAH; // Default type
             currentSelectionId = 1; // Default ID
             currentMode = 'normal'; // Default mode
